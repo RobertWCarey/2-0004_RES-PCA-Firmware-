@@ -459,8 +459,10 @@ boolean Adafruit_SSD1306::begin(uint8_t vcs, uint8_t addr, boolean reset,
 
   clearDisplay();
   if(HEIGHT > 32) {
-    drawBitmap((WIDTH - splash1_width) / 2, (HEIGHT - splash1_height) / 2,
-      splash1_data, splash1_width, splash1_height, 1);
+    // drawBitmap((WIDTH - splash1_width) / 2, (HEIGHT - splash1_height) / 2,
+    //   splash1_data, splash1_width, splash1_height, 1);
+    drawBitmap((WIDTH - UTS1_width) / 2, (HEIGHT - UTS1_height) / 2,
+    UTS1_data, UTS1_width, UTS1_height, 1);
   } else {
     drawBitmap((WIDTH - splash2_width) / 2, (HEIGHT - splash2_height) / 2,
       splash2_data, splash2_width, splash2_height, 1);
