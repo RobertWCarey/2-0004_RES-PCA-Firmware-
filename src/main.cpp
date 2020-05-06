@@ -89,7 +89,7 @@ void UI_updateDisplay(uint16union_t displayState)
       switch (subState)
       {
         case 0:
-          
+          UI_mainMenu();
           break;
         // Adjust Frequency
         case 1:
@@ -105,9 +105,40 @@ void UI_updateDisplay(uint16union_t displayState)
   }
 }
 
+void drawCentreString(const String &buf, int x, int y)
+{
+    int16_t x1, y1;
+    uint16_t w, h;
+    display.getTextBounds(buf, 0, 0, &x1, &y1, &w, &h); //calc width of new string
+    display.setCursor(x - (w / 2), y - (h / 2));
+    display.print(buf);
+}
+
 void UI_mainMenu(void)
 {
-  
+  display.clearDisplay();
+
+  uint8_t dispQuartH = display.height()/4;
+  uint8_t dispHalfW = display.width()/2;
+  uint8_t dispHalfH = display.height()/2;
+
+  // Top Triangle
+  display.fillTriangle(
+    dispHalfW  , dispQuartH-10,
+    dispHalfW-5, dispQuartH,
+    dispHalfW+5, dispQuartH, SSD1306_WHITE);
+
+  display.setTextSize(2);
+  display.setTextColor(SSD1306_WHITE);
+  drawCentreString(F("Frequency"),dispHalfW,dispHalfH);
+
+  //Bottom Triangle
+  display.fillTriangle(
+    dispHalfW  , (dispQuartH*3)+10,
+    dispHalfW-5, (dispQuartH*3),
+    dispHalfW+5, (dispQuartH*3), SSD1306_WHITE);
+
+  display.display();
 
 }
 
@@ -235,24 +266,28 @@ void setup()
 
 void loop()
 {
-  if (Serial.available())
-  {  
-   char c = Serial.read();
-   if (c == '\n')
-   {
-     if (!parseCommand(Command))
-     {
-       Serial.println("Invalid Input");
-       Serial.println("");
-       Serial.println("Valid Inputs:");
-       Serial.println("'D 50', Duty Cycle Update");
-       Serial.println("'F 10000', Frequency Update");
-     }
-     Command = "";
-   }
-   else
-   {
-     Command += c;
-   }
-  }
+  DisplayState.s.Hi = 1;
+  DisplayState.s.Lo = 0;
+  UI_updateDisplay(DisplayState);
+
+  // if (Serial.available())
+  // {  
+  //  char c = Serial.read();
+  //  if (c == '\n')
+  //  {
+  //    if (!parseCommand(Command))
+  //    {
+  //      Serial.println("Invalid Input");
+  //      Serial.println("");
+  //      Serial.println("Valid Inputs:");
+  //      Serial.println("'D 50', Duty Cycle Update");
+  //      Serial.println("'F 10000', Frequency Update");
+  //    }
+  //    Command = "";
+  //  }
+  //  else
+  //  {
+  //    Command += c;
+  //  }
+  // }
 }
