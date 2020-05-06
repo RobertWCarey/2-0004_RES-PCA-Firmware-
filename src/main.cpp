@@ -212,8 +212,11 @@ void UI_init(void)
   // Clear the buffer
   display.clearDisplay();
 
-  // Draw a single pixel in white
-  display.drawPixel(10, 10, SSD1306_WHITE);
+  // Display Current Firmware Version
+  display.setTextSize(2);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(36, 24);
+  display.println(F("0.0.0"));
 
   // Show the display buffer on the screen. You MUST call display() after
   // drawing commands to make them visible on screen!
