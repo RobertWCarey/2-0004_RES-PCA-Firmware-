@@ -1,7 +1,5 @@
 #include <Arduino.h>
 #include "PWM.h"
-#include <SPI.h>
-#include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
@@ -30,7 +28,7 @@ const uint8_t PROGMEM BTN_DOWN = 12;
 // Note D13 is not ideal as it has a res the needs to be desoldered on the nano to work
 const uint8_t PROGMEM BTN_BACK =13;
 uint8_t BTNS[]={BTN_UP, BTN_SELECT,
-                              BTN_DOWN, BTN_BACK};
+                BTN_DOWN, BTN_BACK};
 
 const uint8_t PROGMEM MAX_MAINSTATE = 2;
 uint8_t MAX_SUBSTATE[MAX_MAINSTATE]={2,2};
@@ -311,52 +309,6 @@ void setFreq(int32_t freq)
   analogWrite(pin_PWM2,getAWrite(freq, DUTY));
 }
 
-bool parseCommand(String com)
-{
-  String part1,part2;
-  int32_t val;
-
-  part1 = com.substring(0, com.indexOf(' '));
-  part2 = com.substring(com.indexOf(' ')+1);
-
-  // Duty Cycle
-  if (part1.equalsIgnoreCase("D"))
-  {
-    val = part2.toInt();
-    if (val > 100 || val < 0)
-    {
-      return false;
-    }
-    else
-    {
-      setDutyCycle(val);
-      Serial.print("Duty Cycle: ");
-      Serial.print(DUTY);
-      Serial.println("%");
-      return true;
-    }
-  }
-  // Frequency
-  else if (part1.equalsIgnoreCase("F"))
-  {
-    val = part2.toInt();
-    if (val < 0)
-    {
-      return false;
-    }
-    else
-    {
-      setFreq(val);
-      Serial.print("Frequency: ");
-      Serial.print(FREQ);
-      Serial.println("Hz");
-      return true;
-    }
-  }
-
-  return false;
-}
-
 void PWMInit(void)
 {
   //initialize all timers except for 0, to save time keeping functions
@@ -422,39 +374,7 @@ void setup()
 
 void loop()
 {
-  // static unsigned long period = 300;
-  // static unsigned long waitTime = 0;
-
-  // static uint16_t prevDispState = 0;
-  // if (millis() > waitTime)
-  // {
-    UI_updateDisplay(DisplayState);
-    // prevDispState = DisplayState.l;
-  //   waitTime = millis() + period;
-  // }
+  UI_updateDisplay(DisplayState);
 
   UI_btnUpdate(&DisplayState);
-  
-
-
-  // if (Serial.available())
-  // {  
-  //  char c = Serial.read();
-  //  if (c == '\n')
-  //  {
-  //    if (!parseCommand(Command))
-  //    {
-  //      Serial.println("Invalid Input");
-  //      Serial.println("");
-  //      Serial.println("Valid Inputs:");
-  //      Serial.println("'D 50', Duty Cycle Update");
-  //      Serial.println("'F 10000', Frequency Update");
-  //    }
-  //    Command = "";
-  //  }
-  //  else
-  //  {
-  //    Command += c;
-  //  }
-  // }
 }
