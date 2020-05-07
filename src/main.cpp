@@ -78,6 +78,8 @@ void UI_updateDisplay(uint16union_t displayState);
 
 void UI_mainMenu(void);
 
+void drawCentreString(const String &buf, int x, int y);
+
 void UI_updateDisplay(uint16union_t displayState)
 {
   uint8_t mainState = displayState.s.Hi;
@@ -246,8 +248,7 @@ void UI_init(void)
   // Display Current Firmware Version
   display.setTextSize(2);
   display.setTextColor(SSD1306_WHITE);
-  display.setCursor(36, 24);
-  display.println(F("0.0.0"));
+  drawCentreString(F("0.0.0"), display.width()/2, display.height()/2);
 
   // Show the display buffer on the screen. You MUST call display() after
   // drawing commands to make them visible on screen!
