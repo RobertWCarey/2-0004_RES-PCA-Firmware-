@@ -19,10 +19,19 @@ typedef union
 int32_t clkFreq = 16000000;
 
 // Constants
-const int pin_PWM = 10;
-const int pin_PWM2 = 9;
-const int defaultDuty = 50;
-const int32_t defaultFreq = 35714; //frequency (in Hz)
+const int PROGMEM pin_PWM = 10;
+const int PROGMEM pin_PWM2 = 9;
+const int PROGMEM defaultDuty = 50;
+const int32_t PROGMEM defaultFreq = 35714; //frequency (in Hz)
+
+const uint8_t PROGMEM BTN_UP = 8;
+const int PROGMEM BTN_SELECT = 11;
+const int PROGMEM BTN_DOWN = 12;
+const int PROGMEM BTN_BACK =13;
+
+const uint8_t PROGMEM MAX_MAINSTATE = 2;
+const uint8_t PROGMEM MAX_SUBSTATE[MAX_MAINSTATE]={2,2};
+
 
 // Globals
 int DUTY = defaultDuty;
@@ -79,6 +88,75 @@ void UI_updateDisplay(uint16union_t displayState);
 void UI_mainMenuDisplay(const String &buf);
 
 void drawCentreString(const String &buf, int x, int y);
+
+void UI_btnUpdate(uint16union_t *displayState);
+
+void UI_updateValue(uint8_t btn, uint16union_t *displayState);
+
+void UI_updateValue(uint8_t btn, uint16union_t *displayState)
+{
+  uint8_t *mainState = &displayState->s.Hi;
+  uint8_t *subState = &displayState->s.Lo;
+
+  if (*subState == 0)
+  {
+    switch (btn)
+    {
+    case BTN_UP:
+      // not sure why *mainState--; didnt update val
+      *mainState = *mainState-1;
+      if (*mainState  == 0)
+      {
+        *mainState = MAX_MAINSTATE;
+      }
+      break;
+    
+    default:
+      break;
+    }
+    return;
+  }
+
+
+  switch (*mainState)
+  {
+    // Frequency
+    case 1:
+      switch (*subState)
+      {
+        // Adjust Frequency
+        case 1:
+          // setFreq(val);
+          break;
+        default:
+          break;
+      }
+      break;
+    case 2:
+      switch (*subState)
+      {
+        case 1:
+          break;
+        default:
+          break;
+      }
+      break;
+    default:
+      break;
+  }
+}
+
+void UI_btnUpdate(uint16union_t *displayState)
+{
+  static unsigned long period = 300;
+  static unsigned long waitTime = 0;
+    int btnState = digitalRead(BTN_UP);
+    if (btnState == LOW && (millis() > waitTime) )
+    {
+      UI_updateValue(BTN_UP, displayState);
+      waitTime = millis() + period;
+    }  
+}
 
 void UI_updateDisplay(uint16union_t displayState)
 {
@@ -237,8 +315,6 @@ void PWMInit(void)
   //sets the frequency for the specified pin
   bool success = SetPinFrequencySafe(pin_PWM, defaultFreq);
    if(success) {
-      pinMode(13, OUTPUT);
-      digitalWrite(13, HIGH);
       pinMode(pin_PWM,OUTPUT);
       pinMode(pin_PWM2,OUTPUT);
    }
@@ -249,6 +325,13 @@ void PWMInit(void)
 
 void UI_init(void)
 {
+  //Config Buttons
+  pinMode(BTN_UP,INPUT);
+  pinMode(BTN_SELECT,INPUT);
+  pinMode(BTN_DOWN,INPUT);
+  pinMode(BTN_BACK,INPUT);
+  
+  // Config Display
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3C for 128x32
     Serial.println(F("SSD1306 allocation failed"));
@@ -281,19 +364,26 @@ void setup()
   PWMInit();
 
   UI_init();
+
+    DisplayState.s.Hi = 1;
+  DisplayState.s.Lo = 0;
 }
+
+
 
 void loop()
 {
-  DisplayState.s.Hi = 1;
-  DisplayState.s.Lo = 1;
+  
   static uint16_t prevDispState = 0;
   if (prevDispState != DisplayState.l)
   {
     UI_updateDisplay(DisplayState);
     prevDispState = DisplayState.l;
   }
+
+  UI_btnUpdate(&DisplayState);
   
+
 
   // if (Serial.available())
   // {  
