@@ -32,7 +32,7 @@ uint8_t BTNS[]={BTN_UP, BTN_SELECT,
                               BTN_DOWN, BTN_BACK};
 
 const uint8_t PROGMEM MAX_MAINSTATE = 2;
-const uint8_t PROGMEM MAX_SUBSTATE[MAX_MAINSTATE]={2,2};
+uint8_t MAX_SUBSTATE[MAX_MAINSTATE]={2,2};
 
 
 // Globals
@@ -100,7 +100,7 @@ void UI_updateValue(uint8_t btn, uint16union_t *displayState)
   uint8_t *mainState = &displayState->s.Hi;
   uint8_t *subState = &displayState->s.Lo;
 
-  if (*subState == 0)
+  if (*subState == 1)
   {
     switch (btn)
     {
@@ -119,12 +119,32 @@ void UI_updateValue(uint8_t btn, uint16union_t *displayState)
         *mainState = 1;
       }
       break;
+    case BTN_SELECT:
+      *subState = *subState+1;
+      if (*subState > MAX_SUBSTATE[*mainState-1])
+      {
+        *subState = MAX_SUBSTATE[*mainState-1];
+      }
+      break;
     default:
       break;
     }
     return;
   }
 
+  switch (btn)
+  {
+    case BTN_BACK:
+      *subState = *subState-1;
+      if (*subState == 0)
+      {
+        *subState = 1;
+      }
+      return;
+      break;
+    default:
+      break;
+  }
 
   switch (*mainState)
   {
@@ -162,9 +182,9 @@ void UI_btnUpdate(uint16union_t *displayState)
   for (int i = 0; i < 4; i++)
   {
     int btnState = digitalRead(BTNS[i]);
-    // Serial.print("BTN: "); Serial.println(BTNS[i]);
-    // Serial.print("BtnState: "); Serial.println(btnState);
-    // delay(1000);
+    Serial.print("BTN: "); Serial.println(BTNS[i]);
+    Serial.print("BtnState: "); Serial.println(btnState);
+    delay(500);
     if (btnState == LOW && (millis() > waitTime) )
     {
       UI_updateValue(BTNS[i], displayState);
@@ -186,11 +206,11 @@ void UI_updateDisplay(uint16union_t displayState)
     case 1:
       switch (subState)
       {
-        case 0:
+        case 1:
           UI_mainMenuDisplay(F("Frequency"));
           break;
         // Adjust Frequency
-        case 1:
+        case 2:
           value = String(FREQ);
           UI_mainMenuDisplay(value+"Hz");
           break;
@@ -201,11 +221,11 @@ void UI_updateDisplay(uint16union_t displayState)
     case 2:
       switch (subState)
       {
-        case 0:
+        case 1:
           UI_mainMenuDisplay(F("Duty%"));
           break;
         // Adjust Duty Cycle
-        case 1:
+        case 2:
           value = String(DUTY);
           UI_mainMenuDisplay(value+"%");
           break;
@@ -380,8 +400,8 @@ void setup()
 
   UI_init();
 
-    DisplayState.s.Hi = 1;
-  DisplayState.s.Lo = 0;
+  DisplayState.s.Hi = 1;
+  DisplayState.s.Lo = 2;
 }
 
 
