@@ -25,9 +25,11 @@ const int PROGMEM defaultDuty = 50;
 const int32_t PROGMEM defaultFreq = 35714; //frequency (in Hz)
 
 const uint8_t PROGMEM BTN_UP = 8;
-const int PROGMEM BTN_SELECT = 11;
-const int PROGMEM BTN_DOWN = 12;
-const int PROGMEM BTN_BACK =13;
+const uint8_t PROGMEM BTN_SELECT = 11;
+const uint8_t PROGMEM BTN_DOWN = 12;
+const uint8_t PROGMEM BTN_BACK =13;
+uint8_t BTNS[]={BTN_UP, BTN_SELECT,
+                              BTN_DOWN, BTN_BACK};
 
 const uint8_t PROGMEM MAX_MAINSTATE = 2;
 const uint8_t PROGMEM MAX_SUBSTATE[MAX_MAINSTATE]={2,2};
@@ -110,7 +112,13 @@ void UI_updateValue(uint8_t btn, uint16union_t *displayState)
         *mainState = MAX_MAINSTATE;
       }
       break;
-    
+    case BTN_DOWN:
+      *mainState = *mainState+1;
+      if (*mainState  > MAX_MAINSTATE)
+      {
+        *mainState = 1;
+      }
+      break;
     default:
       break;
     }
@@ -150,12 +158,19 @@ void UI_btnUpdate(uint16union_t *displayState)
 {
   static unsigned long period = 300;
   static unsigned long waitTime = 0;
-    int btnState = digitalRead(BTN_UP);
+  
+  for (int i = 0; i < 4; i++)
+  {
+    int btnState = digitalRead(BTNS[i]);
+    // Serial.print("BTN: "); Serial.println(BTNS[i]);
+    // Serial.print("BtnState: "); Serial.println(btnState);
+    // delay(1000);
     if (btnState == LOW && (millis() > waitTime) )
     {
-      UI_updateValue(BTN_UP, displayState);
+      UI_updateValue(BTNS[i], displayState);
       waitTime = millis() + period;
     }  
+  }
 }
 
 void UI_updateDisplay(uint16union_t displayState)
