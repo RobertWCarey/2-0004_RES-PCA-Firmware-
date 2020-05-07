@@ -22,11 +22,12 @@ int32_t clkFreq = 16000000;
 const int PROGMEM pin_PWM = 10;
 const int PROGMEM pin_PWM2 = 9;
 const int PROGMEM defaultDuty = 50;
-const int32_t PROGMEM defaultFreq = 35714; //frequency (in Hz)
+const int32_t PROGMEM defaultFreq = 40000; //frequency (in Hz)
 
 const uint8_t PROGMEM BTN_UP = 8;
 const uint8_t PROGMEM BTN_SELECT = 11;
 const uint8_t PROGMEM BTN_DOWN = 12;
+// Note D13 is not ideal as it has a res the needs to be desoldered on the nano to work
 const uint8_t PROGMEM BTN_BACK =13;
 uint8_t BTNS[]={BTN_UP, BTN_SELECT,
                               BTN_DOWN, BTN_BACK};
@@ -47,29 +48,6 @@ String Command;
 // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
 #define OLED_RESET     4 // Reset pin # (or -1 if sharing Arduino reset pin)
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
-
-#define NUMFLAKES     10 // Number of snowflakes in the animation example
-
-#define LOGO_HEIGHT   16
-#define LOGO_WIDTH    16
-
-static const unsigned char PROGMEM logo_bmp[] =
-{ B00000000, B11000000,
-  B00000001, B11000000,
-  B00000001, B11000000,
-  B00000011, B11100000,
-  B11110011, B11100000,
-  B11111110, B11111000,
-  B01111110, B11111111,
-  B00110011, B10011111,
-  B00011111, B11111100,
-  B00001101, B01110000,
-  B00011011, B10100000,
-  B00111111, B11100000,
-  B00111111, B11110000,
-  B01111100, B11110000,
-  B01110000, B01110000,
-  B00000000, B00110000 };
 
 // Gets value to set analogWrite function
 int getAWrite(int32_t freq,int duty);
@@ -99,6 +77,7 @@ void UI_updateValue(uint8_t btn, uint16union_t *displayState)
 {
   uint8_t *mainState = &displayState->s.Hi;
   uint8_t *subState = &displayState->s.Lo;
+  int increment = 0;
 
   if (*subState == 1)
   {
@@ -132,6 +111,7 @@ void UI_updateValue(uint8_t btn, uint16union_t *displayState)
     return;
   }
 
+  
   switch (btn)
   {
     case BTN_BACK:
@@ -142,10 +122,16 @@ void UI_updateValue(uint8_t btn, uint16union_t *displayState)
       }
       return;
       break;
+    case BTN_UP:
+      increment = 1;
+      break;
+    case BTN_DOWN:
+      increment = -1;
+      break;
     default:
+      return;
       break;
   }
-
   switch (*mainState)
   {
     // Frequency
@@ -153,8 +139,15 @@ void UI_updateValue(uint8_t btn, uint16union_t *displayState)
       switch (*subState)
       {
         // Adjust Frequency
-        case 1:
-          // setFreq(val);
+        case 2:
+          if (increment > 0)
+          {
+            setFreq(FREQ + 1000);
+          }
+          else if (increment < 0)
+          {
+            setFreq(FREQ - 1000);
+          }
           break;
         default:
           break;
@@ -163,7 +156,15 @@ void UI_updateValue(uint8_t btn, uint16union_t *displayState)
     case 2:
       switch (*subState)
       {
-        case 1:
+        case 2:
+          if (increment > 0)
+          {
+            setDutyCycle(DUTY + 5);
+          }
+          else if (increment < 0)
+          {
+            setDutyCycle(DUTY - 5);
+          }
           break;
         default:
           break;
@@ -176,15 +177,12 @@ void UI_updateValue(uint8_t btn, uint16union_t *displayState)
 
 void UI_btnUpdate(uint16union_t *displayState)
 {
-  static unsigned long period = 300;
+  static unsigned long period = 250;
   static unsigned long waitTime = 0;
   
   for (int i = 0; i < 4; i++)
   {
     int btnState = digitalRead(BTNS[i]);
-    Serial.print("BTN: "); Serial.println(BTNS[i]);
-    Serial.print("BtnState: "); Serial.println(btnState);
-    delay(500);
     if (btnState == LOW && (millis() > waitTime) )
     {
       UI_updateValue(BTNS[i], displayState);
@@ -284,6 +282,14 @@ int getAWrite(int32_t freq,int duty)
 
 void setDutyCycle(int duty)
 {
+  if (duty < 10)
+  {
+    duty = 10;
+  }
+  else if (duty > 90)
+  {
+    duty = 90;
+  }
   DUTY = duty;
   analogWrite(pin_PWM,getAWrite(FREQ, duty));
   analogWrite(pin_PWM2,getAWrite(FREQ, duty));
@@ -291,6 +297,14 @@ void setDutyCycle(int duty)
 
 void setFreq(int32_t freq)
 {
+  if (freq < 5000)
+  {
+    freq = 5000;
+  }
+  else if (freq > 100000)
+  {
+    freq = 1000000;
+  }
   FREQ = freq;
   SetPinFrequencySafe(pin_PWM, freq);
   analogWrite(pin_PWM,getAWrite(freq, DUTY));
@@ -400,7 +414,7 @@ void setup()
 
   UI_init();
 
-  DisplayState.s.Hi = 1;
+  DisplayState.s.Hi = 2;
   DisplayState.s.Lo = 2;
 }
 
@@ -408,13 +422,16 @@ void setup()
 
 void loop()
 {
-  
-  static uint16_t prevDispState = 0;
-  if (prevDispState != DisplayState.l)
-  {
+  // static unsigned long period = 300;
+  // static unsigned long waitTime = 0;
+
+  // static uint16_t prevDispState = 0;
+  // if (millis() > waitTime)
+  // {
     UI_updateDisplay(DisplayState);
-    prevDispState = DisplayState.l;
-  }
+    // prevDispState = DisplayState.l;
+  //   waitTime = millis() + period;
+  // }
 
   UI_btnUpdate(&DisplayState);
   
