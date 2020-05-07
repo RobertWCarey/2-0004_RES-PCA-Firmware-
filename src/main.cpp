@@ -25,8 +25,8 @@ const int defaultDuty = 50;
 const int32_t defaultFreq = 35714; //frequency (in Hz)
 
 // Globals
-int Duty = defaultDuty;
-int32_t Freq = defaultFreq;
+int DUTY = defaultDuty;
+int32_t FREQ = defaultFreq;
 String Command;
 
 
@@ -76,7 +76,7 @@ void UI_init(void);
 uint16union_t DisplayState;
 void UI_updateDisplay(uint16union_t displayState);
 
-void UI_mainMenu(void);
+void UI_mainMenuDisplay(const String &buf);
 
 void drawCentreString(const String &buf, int x, int y);
 
@@ -84,6 +84,9 @@ void UI_updateDisplay(uint16union_t displayState)
 {
   uint8_t mainState = displayState.s.Hi;
   uint8_t subState = displayState.s.Lo;
+  // 0 is an invalid mainState
+  String value;
+
   switch (mainState)
   {
     // Frequency
@@ -91,16 +94,31 @@ void UI_updateDisplay(uint16union_t displayState)
       switch (subState)
       {
         case 0:
-          UI_mainMenu();
+          UI_mainMenuDisplay(F("Frequency"));
           break;
         // Adjust Frequency
         case 1:
+          value = String(FREQ);
+          UI_mainMenuDisplay(value+"Hz");
           break;
         default:
           break;
       }
       break;
     case 2:
+      switch (subState)
+      {
+        case 0:
+          UI_mainMenuDisplay(F("Duty%"));
+          break;
+        // Adjust Duty Cycle
+        case 1:
+          value = String(DUTY);
+          UI_mainMenuDisplay(value+"%");
+          break;
+        default:
+          break;
+      }
       break;
     default:
       break;
@@ -116,7 +134,7 @@ void drawCentreString(const String &buf, int x, int y)
     display.print(buf);
 }
 
-void UI_mainMenu(void)
+void UI_mainMenuDisplay(const String &buf)
 {
   display.clearDisplay();
 
@@ -132,7 +150,7 @@ void UI_mainMenu(void)
 
   display.setTextSize(2);
   display.setTextColor(SSD1306_WHITE);
-  drawCentreString(F("Frequency"),dispHalfW,dispHalfH);
+  drawCentreString(buf,dispHalfW,dispHalfH);
 
   //Bottom Triangle
   display.fillTriangle(
@@ -153,17 +171,17 @@ int getAWrite(int32_t freq,int duty)
 
 void setDutyCycle(int duty)
 {
-  Duty = duty;
-  analogWrite(pin_PWM,getAWrite(Freq, duty));
-  analogWrite(pin_PWM2,getAWrite(Freq, duty));
+  DUTY = duty;
+  analogWrite(pin_PWM,getAWrite(FREQ, duty));
+  analogWrite(pin_PWM2,getAWrite(FREQ, duty));
 }
 
 void setFreq(int32_t freq)
 {
-  Freq = freq;
+  FREQ = freq;
   SetPinFrequencySafe(pin_PWM, freq);
-  analogWrite(pin_PWM,getAWrite(freq, Duty));
-  analogWrite(pin_PWM2,getAWrite(freq, Duty));
+  analogWrite(pin_PWM,getAWrite(freq, DUTY));
+  analogWrite(pin_PWM2,getAWrite(freq, DUTY));
 }
 
 bool parseCommand(String com)
@@ -186,7 +204,7 @@ bool parseCommand(String com)
     {
       setDutyCycle(val);
       Serial.print("Duty Cycle: ");
-      Serial.print(Duty);
+      Serial.print(DUTY);
       Serial.println("%");
       return true;
     }
@@ -203,7 +221,7 @@ bool parseCommand(String com)
     {
       setFreq(val);
       Serial.print("Frequency: ");
-      Serial.print(Freq);
+      Serial.print(FREQ);
       Serial.println("Hz");
       return true;
     }
@@ -268,8 +286,14 @@ void setup()
 void loop()
 {
   DisplayState.s.Hi = 1;
-  DisplayState.s.Lo = 0;
-  UI_updateDisplay(DisplayState);
+  DisplayState.s.Lo = 1;
+  static uint16_t prevDispState = 0;
+  if (prevDispState != DisplayState.l)
+  {
+    UI_updateDisplay(DisplayState);
+    prevDispState = DisplayState.l;
+  }
+  
 
   // if (Serial.available())
   // {  
