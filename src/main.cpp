@@ -350,7 +350,7 @@ void UI_init(void)
   // Display Current Firmware Version
   display.setTextSize(2);
   display.setTextColor(SSD1306_WHITE);
-  drawCentreString(F("0.0.0"), display.width()/2, display.height()/2);
+  drawCentreString(F("0.0.1"), display.width()/2, display.height()/2);
 
   // Show the display buffer on the screen. You MUST call display() after
   // drawing commands to make them visible on screen!
@@ -366,8 +366,8 @@ void setup()
 
   UI_init();
 
-  DisplayState.s.Hi = 2;
-  DisplayState.s.Lo = 2;
+  DisplayState.s.Hi = 1;
+  DisplayState.s.Lo = 1;
 }
 
 
