@@ -33,6 +33,7 @@ uint8_t BTNS[]={BTN_UP, BTN_SELECT,
 const uint8_t PROGMEM MAX_MAINSTATE = 2;
 uint8_t MAX_SUBSTATE[MAX_MAINSTATE]={2,2};
 
+bool DISPLAY_UPDATE = true;
 
 // Globals
 int DUTY = defaultDuty;
@@ -184,6 +185,7 @@ void UI_btnUpdate(uint16union_t *displayState)
     if (btnState == LOW && (millis() > waitTime) )
     {
       UI_updateValue(BTNS[i], displayState);
+      DISPLAY_UPDATE = true;
       waitTime = millis() + period;
     }  
   }
@@ -374,7 +376,11 @@ void setup()
 
 void loop()
 {
-  UI_updateDisplay(DisplayState);
+  if (DISPLAY_UPDATE)
+  {
+    UI_updateDisplay(DisplayState);
+    DISPLAY_UPDATE = false;
+  }
 
   UI_btnUpdate(&DisplayState);
 }
