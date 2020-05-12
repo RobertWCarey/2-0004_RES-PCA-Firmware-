@@ -16,11 +16,44 @@ typedef union
 // Processor Frequency
 int32_t clkFreq = 16000000;
 
+const int16_t PROGMEM SPEED_VAL[] = 
+{
+  0,51,102,153,205,
+  256,307,358,409,460,
+  512,
+  563,614,665,716,767,
+  818,870,921,972,1023
+};
+
+const uint8_t PROGMEM SPEED_DUTY[] = 
+{
+  90,90,90,85,80,
+  75,70,65,60,55,
+  0,
+  45,40,35,30,25,
+  20,15,10,10,10
+};
+
+uint8_t TARGET_SPEED = 10;
+
+const uint8_t PROGMEM MAX_SPEED = 21;
+
+const String PROGMEM SPEED_DISP[] = 
+{
+  "-10","-9","-8","-7","-6",
+  "-5","-4","-3","-2","-1",
+  "0",
+  "1","2","3","4","5",
+  "6","7","8","9","10"
+};
+
 // Constants
 const int PROGMEM pin_PWM = 10;
 const int PROGMEM pin_PWM2 = 9;
 const int PROGMEM defaultDuty = 50;
 const int32_t PROGMEM defaultFreq = 40000; //frequency (in Hz)
+
+const int PROGMEM GEN_PIN = A0;
 
 const uint8_t PROGMEM BTN_UP = 8;
 const uint8_t PROGMEM BTN_SELECT = 11;
@@ -72,6 +105,42 @@ void drawCentreString(const String &buf, int x, int y);
 void UI_btnUpdate(uint16union_t *displayState);
 
 void UI_updateValue(uint8_t btn, uint16union_t *displayState);
+
+void UI_setSpeed(uint8_t speed);
+
+void maintainSpeed(void);
+
+void UI_setSpeed(uint8_t speed)
+{
+  TARGET_SPEED = speed;
+
+  setDutyCycle(SPEED_DUTY[TARGET_SPEED]);
+
+  DISPLAY_UPDATE = true;
+
+}
+
+void maintainSpeed(void)
+{
+  int16_t currentSpeed = analogRead(GEN_PIN);
+  int16_t speedDiff = currentSpeed - SPEED_VAL[TARGET_SPEED];
+  if (TARGET_SPEED != 10) //positive dir
+  {
+    // Speed slow for pos speed (-) (increase duty)
+    // Speed fast for neg speed (-) (increase duty)
+    if (speedDiff < 0)
+    {
+      setDutyCycle(DUTY+1);
+    }
+    // Speed fast for pos speed (+) (decrease duty)
+    // Speed slow for neg speed (+) (decrease duty)
+    else
+    {
+      setDutyCycle(DUTY-1);
+    }
+    
+  }
+}
 
 void UI_updateValue(uint8_t btn, uint16union_t *displayState)
 {
@@ -287,7 +356,7 @@ int getAWrite(int32_t freq,int duty)
 
 void setDutyCycle(int duty)
 {
-  if (duty < 10)
+  if ((duty < 10) && (duty != 0))
   {
     duty = 10;
   }
@@ -377,7 +446,10 @@ void setup()
   DisplayState.s.Lo = 1;
 }
 
+void closed_loop(void)
+{
 
+}
 
 void loop()
 {
@@ -388,4 +460,6 @@ void loop()
   }
 
   UI_btnUpdate(&DisplayState);
+
+
 }
