@@ -34,6 +34,7 @@ const uint8_t PROGMEM MAX_MAINSTATE = 2;
 uint8_t MAX_SUBSTATE[MAX_MAINSTATE]={2,2};
 
 bool DISPLAY_UPDATE = true;
+bool EMERG_STOP = false;
 
 // Globals
 int DUTY = defaultDuty;
@@ -133,28 +134,11 @@ void UI_updateValue(uint8_t btn, uint16union_t *displayState)
   }
   switch (*mainState)
   {
-    // Frequency
+    // Speed
     case 1:
       switch (*subState)
       {
-        // Adjust Frequency
-        case 2:
-          if (increment > 0)
-          {
-            setFreq(FREQ + 1000);
-          }
-          else if (increment < 0)
-          {
-            setFreq(FREQ - 1000);
-          }
-          break;
-        default:
-          break;
-      }
-      break;
-    case 2:
-      switch (*subState)
-      {
+        // Adjust Speed
         case 2:
           if (increment > 0)
           {
@@ -164,6 +148,20 @@ void UI_updateValue(uint8_t btn, uint16union_t *displayState)
           {
             setDutyCycle(DUTY - 5);
           }
+          break;
+        default:
+          break;
+      }
+      break;
+    // Emergency Stop
+    case 2:
+      switch (*subState)
+      {
+        case 2:
+          if (BTN_SELECT)
+          {
+            EMERG_STOP = !EMERG_STOP;
+          }          
           break;
         default:
           break;
@@ -200,32 +198,39 @@ void UI_updateDisplay(uint16union_t displayState)
 
   switch (mainState)
   {
-    // Frequency
+    // Speed
     case 1:
       switch (subState)
       {
         case 1:
-          UI_mainMenuDisplay(F("Frequency"));
+          UI_mainMenuDisplay(F("Speed"));
           break;
-        // Adjust Frequency
+        // Adjust Speed
         case 2:
-          value = String(FREQ);
-          UI_mainMenuDisplay(value+"Hz");
+          value = String(DUTY/10);
+          UI_mainMenuDisplay(value);
           break;
         default:
           break;
       }
       break;
+    // Emergency Stop
     case 2:
       switch (subState)
       {
         case 1:
-          UI_mainMenuDisplay(F("Duty%"));
+          UI_mainMenuDisplay(F("Emerg Stop"));
           break;
-        // Adjust Duty Cycle
+        // Enable Emergency stop
         case 2:
-          value = String(DUTY);
-          UI_mainMenuDisplay(value+"%");
+          if (EMERG_STOP)
+          {
+            UI_mainMenuDisplay(F("ENABLED"));
+          }
+          else
+          {
+            UI_mainMenuDisplay(F("DISABLED"));
+          }          
           break;
         default:
           break;
