@@ -211,11 +211,11 @@ void UI_updateValue(uint8_t btn, uint16union_t *displayState)
         case 2:
           if (increment > 0)
           {
-            setDutyCycle(DUTY + 5);
+            UI_setSpeed(TARGET_SPEED+1);
           }
           else if (increment < 0)
           {
-            setDutyCycle(DUTY - 5);
+            UI_setSpeed(TARGET_SPEED-1);
           }
           break;
         default:
@@ -276,8 +276,7 @@ void UI_updateDisplay(uint16union_t displayState)
           break;
         // Adjust Speed
         case 2:
-          value = String(DUTY/10);
-          UI_mainMenuDisplay(value);
+          UI_mainMenuDisplay(SPEED_DISP[TARGET_SPEED]);
           break;
         default:
           break;
@@ -446,11 +445,6 @@ void setup()
   DisplayState.s.Lo = 1;
 }
 
-void closed_loop(void)
-{
-
-}
-
 void loop()
 {
   if (DISPLAY_UPDATE)
@@ -460,6 +454,8 @@ void loop()
   }
 
   UI_btnUpdate(&DisplayState);
+
+  maintainSpeed();
 
 
 }
