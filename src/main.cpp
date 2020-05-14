@@ -141,7 +141,7 @@ void setup()
 {
   Serial.begin(9600);
 
-  // PWMInit();
+  PWMInit();
 
   UI_init(&display);
 }
