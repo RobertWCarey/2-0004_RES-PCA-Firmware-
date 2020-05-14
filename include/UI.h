@@ -18,20 +18,15 @@ const uint8_t PROGMEM BTN_DOWN = 12;
 // Note D13 is not ideal as it has a res the needs to be desoldered on the nano to work
 const uint8_t PROGMEM BTN_BACK =13;
 
+
+
 // bool DISPLAY_UPDATE = true;
 
 
 // const uint8_t PROGMEM MAX_MAINSTATE = 2;
 // uint8_t MAX_SUBSTATE[MAX_MAINSTATE]={2,2};
 
-// const String PROGMEM SPEED_DISP[] = 
-// {
-//   "-10","-9","-8","-7","-6",
-//   "-5","-4","-3","-2","-1",
-//   "0",
-//   "1","2","3","4","5",
-//   "6","7","8","9","10"
-// };
+
 
 typedef union
 {
@@ -47,7 +42,7 @@ typedef union
 void UI_init(Adafruit_SSD1306 *display);
 
 // Update OLED Display
-// void UI_updateDisplay(Adafruit_SSD1306 *display, int targetSpeed);
+void UI_updateDisplay(Adafruit_SSD1306 *display, int targetSpeed);
 
 
 

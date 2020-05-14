@@ -2,12 +2,21 @@
 
 #include "UI.h"
 
-// uint8_t BTNS[]={BTN_UP, BTN_SELECT,
-//                 BTN_DOWN, BTN_BACK};
+uint8_t BTNS[]={BTN_UP, BTN_SELECT,
+                BTN_DOWN, BTN_BACK};
 
-// uint16union_t Display_State;
+uint16union_t Display_State;
 
-// bool Emerg_Stop = false;
+const String PROGMEM SPEED_DISP[] = 
+{
+  "-10","-9","-8","-7","-6",
+  "-5","-4","-3","-2","-1",
+  "0",
+  "1","2","3","4","5",
+  "6","7","8","9","10"
+};
+
+bool Emerg_Stop = false;
 
 void drawCentreString(const String &buf, int x, int y, Adafruit_SSD1306 *display)
 {
@@ -18,33 +27,33 @@ void drawCentreString(const String &buf, int x, int y, Adafruit_SSD1306 *display
     display->print(buf);
 }
 
-// void UI_mainMenuDisplay(const String &buf, Adafruit_SSD1306 *display)
-// {
-//   display->clearDisplay();
+void UI_mainMenuDisplay(const String &buf, Adafruit_SSD1306 *display)
+{
+  display->clearDisplay();
 
-//   uint8_t dispQuartH = display->height()/4;
-//   uint8_t dispHalfW = display->width()/2;
-//   uint8_t dispHalfH = display->height()/2;
+  uint8_t dispQuartH = display->height()/4;
+  uint8_t dispHalfW = display->width()/2;
+  uint8_t dispHalfH = display->height()/2;
 
-//   // Top Triangle
-//   display->fillTriangle(
-//     dispHalfW  , dispQuartH-10,
-//     dispHalfW-5, dispQuartH,
-//     dispHalfW+5, dispQuartH, SSD1306_WHITE);
+  // Top Triangle
+  display->fillTriangle(
+    dispHalfW  , dispQuartH-10,
+    dispHalfW-5, dispQuartH,
+    dispHalfW+5, dispQuartH, SSD1306_WHITE);
 
-//   display->setTextSize(2);
-//   display->setTextColor(SSD1306_WHITE);
-//   drawCentreString(buf, dispHalfW, dispHalfH, display);
+  display->setTextSize(2);
+  display->setTextColor(SSD1306_WHITE);
+  drawCentreString(buf, dispHalfW, dispHalfH, display);
 
-//   //Bottom Triangle
-//   display->fillTriangle(
-//     dispHalfW  , (dispQuartH*3)+10,
-//     dispHalfW-5, (dispQuartH*3),
-//     dispHalfW+5, (dispQuartH*3), SSD1306_WHITE);
+  //Bottom Triangle
+  display->fillTriangle(
+    dispHalfW  , (dispQuartH*3)+10,
+    dispHalfW-5, (dispQuartH*3),
+    dispHalfW+5, (dispQuartH*3), SSD1306_WHITE);
 
-//   display->display();
+  display->display();
 
-// }
+}
 
 void UI_init(Adafruit_SSD1306 *display)
 {
@@ -80,61 +89,61 @@ void UI_init(Adafruit_SSD1306 *display)
   display->display();
   delay(2000);
 
-  // Display_State.s.Hi = 1;
-  // Display_State.s.Lo = 1;
+  Display_State.s.Hi = 1;
+  Display_State.s.Lo = 1;
 }
 
-// void UI_updateDisplay(Adafruit_SSD1306 *display,int targetSpeed)
-// {
-//   uint8_t mainState = Display_State.s.Hi;
-//   uint8_t subState = Display_State.s.Lo;
-//   // 0 is an invalid mainState
-//   String value;
+void UI_updateDisplay(Adafruit_SSD1306 *display,int targetSpeed)
+{
+  uint8_t mainState = Display_State.s.Hi;
+  uint8_t subState = Display_State.s.Lo;
+  // 0 is an invalid mainState
+  String value;
 
-//   switch (mainState)
-//   {
-//     // Speed
-//     case 1:
-//       switch (subState)
-//       {
-//         case 1:
-//           UI_mainMenuDisplay(F("Speed"), display);
-//           break;
-//         // Adjust Speed
-//         case 2:
-//           Serial.print("Disp: "); Serial.println(SPEED_DISP[targetSpeed]);
-//           UI_mainMenuDisplay(SPEED_DISP[targetSpeed], display);
-//           break;
-//         default:
-//           break;
-//       }
-//       break;
-//     // Emergency Stop
-//     case 2:
-//       switch (subState)
-//       {
-//         case 1:
-//           UI_mainMenuDisplay(F("Emerg Stop"), display);
-//           break;
-//         // Enable Emergency stop
-//         case 2:
-//           if (Emerg_Stop)
-//           {
-//             UI_mainMenuDisplay(F("ENABLED"), display);
-//           }
-//           else
-//           {
-//             UI_mainMenuDisplay(F("DISABLED"), display);
-//           }          
-//           break;
-//         default:
-//           break;
-//       }
-//       break;
-//     default:
-//       break;
-//   }
-// }
+  switch (mainState)
+  {
+    // Speed
+    case 1:
+      switch (subState)
+      {
+        case 1:
+          UI_mainMenuDisplay(F("Speed"), display);
+          break;
+        // Adjust Speed
+        case 2:
+          Serial.print("Disp: "); Serial.println(SPEED_DISP[targetSpeed]);
+          UI_mainMenuDisplay(SPEED_DISP[targetSpeed], display);
+          break;
+        default:
+          break;
+      }
+      break;
+    // Emergency Stop
+    case 2:
+      switch (subState)
+      {
+        case 1:
+          UI_mainMenuDisplay(F("Emerg Stop"), display);
+          break;
+        // Enable Emergency stop
+        case 2:
+          if (Emerg_Stop)
+          {
+            UI_mainMenuDisplay(F("ENABLED"), display);
+          }
+          else
+          {
+            UI_mainMenuDisplay(F("DISABLED"), display);
+          }          
+          break;
+        default:
+          break;
+      }
+      break;
+    default:
+      break;
+  }
+}
 
 // void UI_setSpeed(int speed)
 // {

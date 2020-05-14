@@ -144,7 +144,7 @@ void loop()
 {
   // if (DISPLAY_UPDATE)
   // {
-    // UI_updateDisplay(&display,Target_Speed);
+    UI_updateDisplay(&display,Target_Speed);
   //   DISPLAY_UPDATE = false;
   // }
 
