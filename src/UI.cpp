@@ -149,8 +149,8 @@ void UI_updateDisplay(Adafruit_SSD1306 *display,int targetSpeed)
 
 void UI_setSpeed(int *targetSpeed, int newSpeed)
 {
-  // Serial.print("newSpeed (setSpeed): "); Serial.println(newSpeed);
-  if ((newSpeed < 0) && (newSpeed >21))
+  Serial.print("newSpeed (setSpeed): "); Serial.println(newSpeed);
+  if ((newSpeed >= 0) && (newSpeed <=20))
   {
     *targetSpeed = newSpeed;
 
@@ -220,6 +220,7 @@ void updateValue(uint8_t btn, int *targetSpeed)
       return;
       break;
   }
+
   switch (*mainState)
   {
     // Speed
@@ -230,12 +231,11 @@ void updateValue(uint8_t btn, int *targetSpeed)
         case 2:
           if (increment > 0)
           {
-            // Serial.print("Speed (upVal): "); Serial.println(targetSpeed, *targetSpeed+1);
             UI_setSpeed(targetSpeed, *targetSpeed+1);
           }
           else if (increment < 0)
           {
-            UI_setSpeed(targetSpeed, *targetSpeed);
+            UI_setSpeed(targetSpeed, *targetSpeed-1);
           }
           break;
         default:
