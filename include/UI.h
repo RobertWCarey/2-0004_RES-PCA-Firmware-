@@ -23,8 +23,7 @@ const uint8_t PROGMEM BTN_BACK =13;
 // bool DISPLAY_UPDATE = true;
 
 
-// const uint8_t PROGMEM MAX_MAINSTATE = 2;
-// uint8_t MAX_SUBSTATE[MAX_MAINSTATE]={2,2};
+
 
 
 
@@ -44,12 +43,8 @@ void UI_init(Adafruit_SSD1306 *display);
 // Update OLED Display
 void UI_updateDisplay(Adafruit_SSD1306 *display, int targetSpeed);
 
+void UI_btnUpdate(int *targetSpeed);
 
-
-// void UI_btnUpdate(uint16union_t *displayState);
-
-// void UI_updateValue(uint8_t btn, uint16union_t *displayState);
-
-// void UI_setSpeed(int speed);
+// void UI_setSpeed(int *targetSpeed, int newSpeed);
 
 #endif //_UI_H_

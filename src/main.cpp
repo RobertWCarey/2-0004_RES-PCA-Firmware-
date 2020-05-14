@@ -148,7 +148,7 @@ void loop()
   //   DISPLAY_UPDATE = false;
   // }
 
-  // UI_btnUpdate(&DisplayState);
+  UI_btnUpdate(&Target_Speed);
 
   // maintainSpeed();
 

@@ -6,6 +6,8 @@ uint8_t BTNS[]={BTN_UP, BTN_SELECT,
                 BTN_DOWN, BTN_BACK};
 
 uint16union_t Display_State;
+const uint8_t PROGMEM MAX_MAINSTATE = 2;
+uint8_t MAX_SUBSTATE[MAX_MAINSTATE]={2,2};
 
 const String PROGMEM SPEED_DISP[] = 
 {
@@ -27,7 +29,7 @@ void drawCentreString(const String &buf, int x, int y, Adafruit_SSD1306 *display
     display->print(buf);
 }
 
-void UI_mainMenuDisplay(const String &buf, Adafruit_SSD1306 *display)
+void mainMenuDisplay(const String &buf, Adafruit_SSD1306 *display)
 {
   display->clearDisplay();
 
@@ -107,12 +109,12 @@ void UI_updateDisplay(Adafruit_SSD1306 *display,int targetSpeed)
       switch (subState)
       {
         case 1:
-          UI_mainMenuDisplay(F("Speed"), display);
+          mainMenuDisplay(F("Speed"), display);
           break;
         // Adjust Speed
         case 2:
-          Serial.print("Disp: "); Serial.println(SPEED_DISP[targetSpeed]);
-          UI_mainMenuDisplay(SPEED_DISP[targetSpeed], display);
+          // Serial.print("Disp: "); Serial.println(SPEED_DISP[targetSpeed]);
+          mainMenuDisplay(SPEED_DISP[targetSpeed], display);
           break;
         default:
           break;
@@ -123,17 +125,17 @@ void UI_updateDisplay(Adafruit_SSD1306 *display,int targetSpeed)
       switch (subState)
       {
         case 1:
-          UI_mainMenuDisplay(F("Emerg Stop"), display);
+          mainMenuDisplay(F("Emerg Stop"), display);
           break;
         // Enable Emergency stop
         case 2:
           if (Emerg_Stop)
           {
-            UI_mainMenuDisplay(F("ENABLED"), display);
+            mainMenuDisplay(F("ENABLED"), display);
           }
           else
           {
-            UI_mainMenuDisplay(F("DISABLED"), display);
+            mainMenuDisplay(F("DISABLED"), display);
           }          
           break;
         default:
@@ -145,136 +147,136 @@ void UI_updateDisplay(Adafruit_SSD1306 *display,int targetSpeed)
   }
 }
 
-// void UI_setSpeed(int speed)
-// {
-//   Serial.print("Speed (setSpeed): "); Serial.println(speed);
-//   if ((speed < 0) && (speed >21))
-//   {
-//     TARGET_SPEED = speed;
+void UI_setSpeed(int *targetSpeed, int newSpeed)
+{
+  // Serial.print("newSpeed (setSpeed): "); Serial.println(newSpeed);
+  if ((newSpeed < 0) && (newSpeed >21))
+  {
+    *targetSpeed = newSpeed;
 
-//     setDutyCycle(SPEED_DUTY[TARGET_SPEED]);
+    // setDutyCycle(SPEED_DUTY[*targetSpeed]);
 
-//     DISPLAY_UPDATE = true;
-//   }
+    // DISPLAY_UPDATE = true;
+  }
 
-// }
+}
 
-// void UI_updateValue(uint8_t btn, uint16union_t *displayState)
-// {
-//   uint8_t *mainState = &displayState->s.Hi;
-//   uint8_t *subState = &displayState->s.Lo;
-//   int increment = 0;
+void updateValue(uint8_t btn, int *targetSpeed)
+{
+  uint8_t *mainState = &Display_State.s.Hi;
+  uint8_t *subState = &Display_State.s.Lo;
+  int increment = 0;
 
-//   if (*subState == 1)
-//   {
-//     switch (btn)
-//     {
-//     case BTN_UP:
-//       // not sure why *mainState--; didnt update val
-//       *mainState = *mainState-1;
-//       if (*mainState  == 0)
-//       {
-//         *mainState = MAX_MAINSTATE;
-//       }
-//       break;
-//     case BTN_DOWN:
-//       *mainState = *mainState+1;
-//       if (*mainState  > MAX_MAINSTATE)
-//       {
-//         *mainState = 1;
-//       }
-//       break;
-//     case BTN_SELECT:
-//       *subState = *subState+1;
-//       if (*subState > MAX_SUBSTATE[*mainState-1])
-//       {
-//         *subState = MAX_SUBSTATE[*mainState-1];
-//       }
-//       break;
-//     default:
-//       break;
-//     }
-//     return;
-//   }
+  if (*subState == 1)
+  {
+    switch (btn)
+    {
+    case BTN_UP:
+      // not sure why *mainState--; didnt update val
+      *mainState = *mainState-1;
+      if (*mainState  == 0)
+      {
+        *mainState = MAX_MAINSTATE;
+      }
+      break;
+    case BTN_DOWN:
+      *mainState = *mainState+1;
+      if (*mainState  > MAX_MAINSTATE)
+      {
+        *mainState = 1;
+      }
+      break;
+    case BTN_SELECT:
+      *subState = *subState+1;
+      if (*subState > MAX_SUBSTATE[*mainState-1])
+      {
+        *subState = MAX_SUBSTATE[*mainState-1];
+      }
+      break;
+    default:
+      break;
+    }
+    return;
+  }
 
   
-//   switch (btn)
-//   {
-//     case BTN_BACK:
-//       *subState = *subState-1;
-//       if (*subState == 0)
-//       {
-//         *subState = 1;
-//       }
-//       return;
-//       break;
-//     case BTN_UP:
-//       increment = 1;
-//       break;
-//     case BTN_DOWN:
-//       increment = -1;
-//       break;
-//     default:
-//       return;
-//       break;
-//   }
-//   switch (*mainState)
-//   {
-//     // Speed
-//     case 1:
-//       switch (*subState)
-//       {
-//         // Adjust Speed
-//         case 2:
-//           if (increment > 0)
-//           {
-//             Serial.print("Speed (upVal): "); Serial.println(TARGET_SPEED+1);
-//             UI_setSpeed(TARGET_SPEED+1);
-//           }
-//           else if (increment < 0)
-//           {
-//             UI_setSpeed(TARGET_SPEED-1);
-//           }
-//           break;
-//         default:
-//           break;
-//       }
-//       break;
-//     // Emergency Stop
-//     case 2:
-//       switch (*subState)
-//       {
-//         case 2:
-//           if (BTN_SELECT)
-//           {
-//             Emerg_Stop = !Emerg_Stop;
-//           }          
-//           break;
-//         default:
-//           break;
-//       }
-//       break;
-//     default:
-//       break;
-//   }
-// }
+  switch (btn)
+  {
+    case BTN_BACK:
+      *subState = *subState-1;
+      if (*subState == 0)
+      {
+        *subState = 1;
+      }
+      return;
+      break;
+    case BTN_UP:
+      increment = 1;
+      break;
+    case BTN_DOWN:
+      increment = -1;
+      break;
+    default:
+      return;
+      break;
+  }
+  switch (*mainState)
+  {
+    // Speed
+    case 1:
+      switch (*subState)
+      {
+        // Adjust Speed
+        case 2:
+          if (increment > 0)
+          {
+            // Serial.print("Speed (upVal): "); Serial.println(targetSpeed, *targetSpeed+1);
+            UI_setSpeed(targetSpeed, *targetSpeed+1);
+          }
+          else if (increment < 0)
+          {
+            UI_setSpeed(targetSpeed, *targetSpeed);
+          }
+          break;
+        default:
+          break;
+      }
+      break;
+    // Emergency Stop
+    case 2:
+      switch (*subState)
+      {
+        case 2:
+          if (BTN_SELECT)
+          {
+            Emerg_Stop = !Emerg_Stop;
+          }          
+          break;
+        default:
+          break;
+      }
+      break;
+    default:
+      break;
+  }
+}
 
-// void UI_btnUpdate(uint16union_t *displayState)
-// {
-//   static unsigned long period = 250;
-//   static unsigned long waitTime = 0;
+void UI_btnUpdate(int *targetSpeed)
+{
+  static unsigned long period = 250;
+  static unsigned long waitTime = 0;
   
-//   for (int i = 0; i < 4; i++)
-//   {
-//     int btnState = digitalRead(BTNS[i]);
-//     if (btnState == LOW && (millis() > waitTime) )
-//     {
-//       UI_updateValue(BTNS[i], displayState);
-//       DISPLAY_UPDATE = true;
-//       waitTime = millis() + period;
-//     }  
-//   }
-// }
+  for (int i = 0; i < 4; i++)
+  {
+    int btnState = digitalRead(BTNS[i]);
+    if (btnState == LOW && (millis() > waitTime) )
+    {
+      updateValue(BTNS[i], targetSpeed);
+      // DISPLAY_UPDATE = true;
+      waitTime = millis() + period;
+    }  
+  }
+}
 
 
 
