@@ -7,23 +7,23 @@ int32_t clkFreq = 16000000;
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-// const int16_t PROGMEM SPEED_VAL[] = 
-// {
-//   0,51,102,153,205,
-//   256,307,358,409,460,
-//   512,
-//   563,614,665,716,767,
-//   818,870,921,972,1023
-// };
+const int16_t PROGMEM SPEED_VAL[] = 
+{
+  0,51,102,153,205,
+  256,307,358,409,460,
+  512,
+  563,614,665,716,767,
+  818,870,921,972,1023
+};
 
-// const uint8_t PROGMEM SPEED_DUTY[] = 
-// {
-//   90,90,90,85,80,
-//   75,70,65,60,55,
-//   0,
-//   45,40,35,30,25,
-//   20,15,10,10,10
-// };
+const uint8_t PROGMEM SPEED_DUTY[] = 
+{
+  90,90,90,85,80,
+  75,70,65,60,55,
+  0,
+  45,40,35,30,25,
+  20,15,10,10,10
+};
 
 // Set to 10 as the is the zero point in the array
 int Target_Speed = 10;
@@ -56,27 +56,33 @@ void PWMInit(void);
 
 
 
-// void maintainSpeed(void)
-// {
-//   int16_t currentSpeed = analogRead(GEN_PIN);
-//   int16_t speedDiff = currentSpeed - SPEED_VAL[TARGET_SPEED];
-//   if (TARGET_SPEED != 10) //positive dir
-//   {
-//     // Speed slow for pos speed (-) (increase duty)
-//     // Speed fast for neg speed (-) (increase duty)
-//     if (speedDiff < 0)
-//     {
-//       setDutyCycle(DUTY+1);
-//     }
-//     // Speed fast for pos speed (+) (decrease duty)
-//     // Speed slow for neg speed (+) (decrease duty)
-//     else
-//     {
-//       setDutyCycle(DUTY-1);
-//     }
+void maintainSpeed(void)
+{
+  int16_t currentSpeed = analogRead(GEN_PIN);
+  int16_t speedDiff = currentSpeed - SPEED_VAL[Target_Speed];
+  if (Target_Speed == 10) //positive dir
+  {
+    setDutyCycle(0);
+  }
+  else
+  {
+    // Speed slow for pos speed (-) (increase duty)
+    // Speed fast for neg speed (-) (increase duty)
+    if (speedDiff < 0)
+    {
+      setDutyCycle(DUTY+1);
+      Serial.print("Duty: "); Serial.println(DUTY);
+    }
+    // Speed fast for pos speed (+) (decrease duty)
+    // Speed slow for neg speed (+) (decrease duty)
+    else
+    {
+      setDutyCycle(DUTY-1);
+      Serial.print("Duty: "); Serial.println(DUTY);
+    }
     
-//   }
-// }
+  }
+}
 
 int getAWrite(int32_t freq,int duty)
 {
@@ -150,7 +156,7 @@ void loop()
 
   UI_btnUpdate(&Target_Speed);
 
-  // maintainSpeed();
+  maintainSpeed();
 
 
 }
