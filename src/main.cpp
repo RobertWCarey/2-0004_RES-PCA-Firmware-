@@ -26,7 +26,7 @@ const uint8_t PROGMEM SPEED_DUTY[] =
 };
 
 // Set to 10 as the is the zero point in the array
-int Target_Speed = 10;
+int Target_Speed = 11;
 
 // const uint8_t PROGMEM MAX_SPEED = 21;
 
@@ -58,30 +58,36 @@ void PWMInit(void);
 
 void maintainSpeed(void)
 {
-  int16_t currentSpeed = analogRead(GEN_PIN);
-  int16_t speedDiff = currentSpeed - SPEED_VAL[Target_Speed];
+  int currentSpeed = analogRead(GEN_PIN);
+  // analogWrite(A1,int(currentSpeed*(5.0/1023)));
+  // Serial.print("Current Speed: ");
+  // Serial.println(currentSpeed);
+  // Serial.print("Target: "); Serial.println(SPEED_VAL[10]);
+  int speedDiff = currentSpeed - SPEED_VAL[Target_Speed];
+  // Serial.print("Speed Diff: "); Serial.println(speedDiff);
   if (Target_Speed == 10) //positive dir
   {
     setDutyCycle(0);
   }
-  else
+  else if ((speedDiff > 100) || (speedDiff < -100))
   {
     // Speed slow for pos speed (-) (increase duty)
     // Speed fast for neg speed (-) (increase duty)
     if (speedDiff < 0)
     {
       setDutyCycle(DUTY+1);
-      Serial.print("Duty: "); Serial.println(DUTY);
+      // Serial.print("Duty: "); Serial.println(DUTY);
     }
     // Speed fast for pos speed (+) (decrease duty)
     // Speed slow for neg speed (+) (decrease duty)
     else
     {
       setDutyCycle(DUTY-1);
-      Serial.print("Duty: "); Serial.println(DUTY);
+      // Serial.print("Duty: "); Serial.println(DUTY);
     }
     
   }
+  // delay(1000);
 }
 
 int getAWrite(int32_t freq,int duty)
@@ -128,11 +134,11 @@ void PWMInit(void)
   InitTimersSafe();
   //sets the frequency for the specified pin
   bool success = SetPinFrequencySafe(pin_PWM, defaultFreq);
-   if(success) {
-      pinMode(pin_PWM,OUTPUT);
-      pinMode(pin_PWM2,OUTPUT);
-   }
-   TCCR1A |= _BV(COM1A0);
+  if(success) {
+    pinMode(pin_PWM,OUTPUT);
+    pinMode(pin_PWM2,OUTPUT);
+  }
+  TCCR1A |= _BV(COM1A0);
   analogWrite(pin_PWM,getAWrite(defaultFreq,defaultDuty));
   analogWrite(pin_PWM2,getAWrite(defaultFreq,defaultDuty));
 }
@@ -145,6 +151,8 @@ void setup()
 
   UI_init(&display);
 }
+unsigned long period = 500;
+unsigned long waitTime = 0;
 
 void loop()
 {
@@ -156,7 +164,11 @@ void loop()
 
   UI_btnUpdate(&Target_Speed);
 
-  maintainSpeed();
+  if (millis() > waitTime)
+  {
+    maintainSpeed();
+    waitTime = millis() + period;
+  }
 
 
 }
