@@ -84,7 +84,7 @@ void UI_init(Adafruit_SSD1306 *display)
   // Display Current Firmware Version
   display->setTextSize(2);
   display->setTextColor(SSD1306_WHITE);
-  drawCentreString(F("0.0.2"), display->width()/2, display->height()/2, display);
+  drawCentreString(SW_VER, display->width()/2, display->height()/2, display);
 
   // Show the display buffer on the screen. You MUST call display() after
   // drawing commands to make them visible on screen!
