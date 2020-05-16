@@ -7,28 +7,22 @@ int32_t clkFreq = 16000000;
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-const int16_t PROGMEM SPEED_VAL[] = 
-{
-  0,51,102,153,205,
-  256,307,358,409,460,
-  512,
-  563,614,665,716,767,
-  818,870,921,972,1023
-};
+// const int SPEED_VAL[] = 
+// {
+//   0,51,102,153,205,
+//   256,307,358,409,460,
+//   512,
+//   563,614,665,716,767,
+//   818,870,921,972,1023
+// };
 
-const uint8_t PROGMEM SPEED_DUTY[] = 
+const int SPEED_DUTY[] = 
 {
-  90,90,90,85,80,
-  75,70,65,60,55,
-  0,
-  45,40,35,30,25,
-  20,15,10,10,10
+  80,75,70,65,60,55,50,45,40,35,30,25,20,
 };
 
 // Set to 10 as the is the zero point in the array
-int Target_Speed = 11;
-
-// const uint8_t PROGMEM MAX_SPEED = 21;
+int Target_Speed = 6;
 
 // Constants
 const int PROGMEM pin_PWM = 10;
@@ -59,34 +53,27 @@ void PWMInit(void);
 void maintainSpeed(void)
 {
   int currentSpeed = analogRead(GEN_PIN);
-  // analogWrite(A1,int(currentSpeed*(5.0/1023)));
-  // Serial.print("Current Speed: ");
-  // Serial.println(currentSpeed);
-  // Serial.print("Target: "); Serial.println(SPEED_VAL[10]);
-  int speedDiff = currentSpeed - SPEED_VAL[Target_Speed];
-  // Serial.print("Speed Diff: "); Serial.println(speedDiff);
-  if (Target_Speed == 10) //positive dir
-  {
-    setDutyCycle(0);
-  }
-  else if ((speedDiff > 100) || (speedDiff < -100))
-  {
-    // Speed slow for pos speed (-) (increase duty)
-    // Speed fast for neg speed (-) (increase duty)
-    if (speedDiff < 0)
-    {
-      setDutyCycle(DUTY+1);
-      // Serial.print("Duty: "); Serial.println(DUTY);
-    }
-    // Speed fast for pos speed (+) (decrease duty)
-    // Speed slow for neg speed (+) (decrease duty)
-    else
-    {
-      setDutyCycle(DUTY-1);
-      // Serial.print("Duty: "); Serial.println(DUTY);
-    }
+  // int speedDiff = currentSpeed - SPEED_VAL[Target_Speed];
+    // Closed loop control
+  // if (Target_Speed == 10) //positive dir
+  // {
+  //   setDutyCycle(0);
+  // }
+  // else if ((speedDiff > 100) || (speedDiff < -100))
+  // {
+  //   if (speedDiff < 0)
+  //   {
+  //     setDutyCycle(DUTY+1);
+  //   }
+  //   else
+  //   {
+  //     setDutyCycle(DUTY-1);
+  //   }
     
-  }
+  // }
+
+  // Open Loop Control
+  setDutyCycle(SPEED_DUTY[Target_Speed]);
   // delay(1000);
 }
 
@@ -99,14 +86,14 @@ int getAWrite(int32_t freq,int duty)
 
 void setDutyCycle(int duty)
 {
-  if ((duty < 10) && (duty != 0))
-  {
-    duty = 10;
-  }
-  else if (duty > 90)
-  {
-    duty = 90;
-  }
+  // if ((duty < 10) && (duty != 0))
+  // {
+  //   duty = 10;
+  // }
+  // else if (duty > 90)
+  // {
+  //   duty = 90;
+  // }
   DUTY = duty;
   analogWrite(pin_PWM,getAWrite(FREQ, duty));
   analogWrite(pin_PWM2,getAWrite(FREQ, duty));
@@ -145,12 +132,13 @@ void PWMInit(void)
 
 void setup()
 {
-  Serial.begin(9600);
+  Serial.begin(115200);
 
   PWMInit();
 
   UI_init(&display);
 }
+
 unsigned long period = 500;
 unsigned long waitTime = 0;
 
@@ -164,11 +152,20 @@ void loop()
 
   UI_btnUpdate(&Target_Speed);
 
-  if (millis() > waitTime)
-  {
-    maintainSpeed();
-    waitTime = millis() + period;
-  }
+  // if (millis() > waitTime)
+  // {
+  // Serial.print("TSpeed: "); 
+  // Serial.println(Target_Speed);
+  // Serial.print("Speed Duty: "); 
+  // Serial.println(SPEED_DUTY[Target_Speed]);
 
+
+  maintainSpeed();
+
+  
+    
+  //   waitTime = millis() + period;
+  // }
+  // delay(100);
 
 }

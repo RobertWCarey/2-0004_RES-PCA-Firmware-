@@ -6,16 +6,16 @@ uint8_t BTNS[]={BTN_UP, BTN_SELECT,
                 BTN_DOWN, BTN_BACK};
 
 uint16union_t Display_State;
-const uint8_t PROGMEM MAX_MAINSTATE = 2;
-uint8_t MAX_SUBSTATE[MAX_MAINSTATE]={2,2};
+const uint8_t PROGMEM MAX_MAINSTATE = 1;
+uint8_t MAX_SUBSTATE[MAX_MAINSTATE]={2};
 
 const String PROGMEM SPEED_DISP[] = 
 {
-  "-10","-9","-8","-7","-6",
+  "-6",
   "-5","-4","-3","-2","-1",
   "0",
   "1","2","3","4","5",
-  "6","7","8","9","10"
+  "6"
 };
 
 bool Emerg_Stop = false;
@@ -150,7 +150,7 @@ void UI_updateDisplay(Adafruit_SSD1306 *display,int targetSpeed)
 void UI_setSpeed(int *targetSpeed, int newSpeed)
 {
   Serial.print("newSpeed (setSpeed): "); Serial.println(newSpeed);
-  if ((newSpeed >= 0) && (newSpeed <=20))
+  if ((newSpeed >= 0) && (newSpeed <=12))
   {
     *targetSpeed = newSpeed;
 
