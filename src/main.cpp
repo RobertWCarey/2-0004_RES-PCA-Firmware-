@@ -69,7 +69,7 @@ void maintainSpeed(void)
   if (SpeedFlag == true)
   {
     SpeedFlag = false;
-    Serial.println("SPEED CHANGE RECOGNISED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    Serial.println("SPEED CHANGE RECOGNISED!");
     setDutyCycle(SPEED_DUTY[Target_Speed]);
     //delay(1000);
   }
@@ -82,24 +82,21 @@ void maintainSpeed(void)
   {
     if (speedDiff < 0)
     {
-
       if ((millis() > waitTime))
       {
+        setDutyCycle(DUTY + 1);
         waitTime = millis() + period;
       }
-      setDutyCycle(DUTY + 1);
     }
     else
     {
-
       if ((millis() > waitTime))
       {
+        setDutyCycle(DUTY - 1);
         waitTime = millis() + period;
       }
-      setDutyCycle(DUTY - 1);
     }
   }
-
 
   // // Open Loop Control
   // if (SpeedFlag == true)
