@@ -9,30 +9,15 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 const int SPEED_VAL[] =
     {
-        220, 280, 340, 415, 475,
-        506,
-        530, 600, 680, 740, 820};
+        220, 280, 340, 415, 475, 506, 506,
+        506, 530, 600, 680, 740, 820};
 
 const int SPEED_DUTY[] =
     {
-        80,
-        75,
-        70,
-        65,
-        60,
-        55,
-        50,
-        45,
-        40,
-        35,
-        30,
-        25,
-        20,
-};
+        80, 75, 70, 65, 60, 55, 50, 45, 40, 35, 30, 25, 20};
 
 // Set to 10 as the is the zero point in the array
 int Target_Speed = 6;
-bool SpeedFlag = false;
 
 // Constants
 const int PROGMEM pin_PWM = 10;
@@ -58,21 +43,19 @@ void PWMInit(void);
 
 // void maintainSpeed(void);
 
+unsigned long period = 500;
+unsigned long waitTime = 0;
+
 void maintainSpeed(void)
 {
-  static unsigned long period = 250;
-  static unsigned long waitTime = 0;
   int currentSpeed = analogRead(GEN_PIN);
-  //Serial.println(currentSpeed, DEC);
+  Serial.print("CurrentSpeed: ");
+  Serial.println(currentSpeed);
+
   int speedDiff = currentSpeed - SPEED_VAL[Target_Speed];
-  Serial.println(Target_Speed);
-  if (SpeedFlag == true)
-  {
-    SpeedFlag = false;
-    Serial.println("SPEED CHANGE RECOGNISED!");
-    setDutyCycle(SPEED_DUTY[Target_Speed]);
-    //delay(1000);
-  }
+  Serial.print("Speeddif: ");
+  Serial.println(speedDiff);
+
   // Closed loop control
   if (Target_Speed == 6) //positive dir
   {
@@ -82,7 +65,7 @@ void maintainSpeed(void)
   {
     if (speedDiff < 0)
     {
-      if ((millis() > waitTime))
+      if (millis() > waitTime)
       {
         setDutyCycle(DUTY + 1);
         waitTime = millis() + period;
@@ -90,22 +73,19 @@ void maintainSpeed(void)
     }
     else
     {
-      if ((millis() > waitTime))
+      if (millis() > waitTime)
       {
         setDutyCycle(DUTY - 1);
         waitTime = millis() + period;
       }
     }
+
+    // }
+
+    // Open Loop Control
+    // setDutyCycle(SPEED_DUTY[Target_Speed]);
+    // delay(1000);
   }
-
-  // // Open Loop Control
-  // if (SpeedFlag == true)
-  // {
-  //   setDutyCycle(SPEED_DUTY[Target_Speed]);
-  //   SpeedFlag = false;
-  // }
-
-  // delay(1000);
 }
 
 int getAWrite(int32_t freq, int duty)
@@ -117,11 +97,11 @@ int getAWrite(int32_t freq, int duty)
 
 void setDutyCycle(int duty)
 {
-  if ((duty < 20) && (duty != 0))
+  if ((duty < 10) && (duty != 0))
   {
     duty = 20;
   }
-  else if (duty > 80)
+  else if (duty > 90)
   {
     duty = 80;
   }
@@ -171,8 +151,8 @@ void setup()
   UI_init(&display);
 }
 
-unsigned long period = 500;
-unsigned long waitTime = 0;
+// unsigned long period = 500;
+// unsigned long waitTime = 0;
 
 void loop()
 {
@@ -182,7 +162,7 @@ void loop()
   //   DISPLAY_UPDATE = false;
   // }
 
-  UI_btnUpdate(&Target_Speed, &SpeedFlag);
+  UI_btnUpdate(&Target_Speed);
 
   // if (millis() > waitTime)
   // {
