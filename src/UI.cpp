@@ -147,13 +147,13 @@ void UI_updateDisplay(Adafruit_SSD1306 *display,int targetSpeed)
   }
 }
 
-void UI_setSpeed(int *targetSpeed, int newSpeed)
+void UI_setSpeed(int *targetSpeed, int newSpeed, bool *speedFlag)
 {
   Serial.print("newSpeed (setSpeed): "); Serial.println(newSpeed);
   if ((newSpeed >= 0) && (newSpeed <=12))
   {
     *targetSpeed = newSpeed;
-
+    *speedFlag = true;
     // setDutyCycle(SPEED_DUTY[*targetSpeed]);
 
     // DISPLAY_UPDATE = true;
@@ -161,7 +161,7 @@ void UI_setSpeed(int *targetSpeed, int newSpeed)
 
 }
 
-void updateValue(uint8_t btn, int *targetSpeed)
+void updateValue(uint8_t btn, int *targetSpeed, bool *speedFlag)
 {
   uint8_t *mainState = &Display_State.s.Hi;
   uint8_t *subState = &Display_State.s.Lo;
@@ -231,11 +231,12 @@ void updateValue(uint8_t btn, int *targetSpeed)
         case 2:
           if (increment > 0)
           {
-            UI_setSpeed(targetSpeed, *targetSpeed+1);
+            UI_setSpeed(targetSpeed, *targetSpeed+1, speedFlag);
+            
           }
           else if (increment < 0)
           {
-            UI_setSpeed(targetSpeed, *targetSpeed-1);
+            UI_setSpeed(targetSpeed, *targetSpeed-1, speedFlag);
           }
           break;
         default:
@@ -261,7 +262,7 @@ void updateValue(uint8_t btn, int *targetSpeed)
   }
 }
 
-void UI_btnUpdate(int *targetSpeed)
+void UI_btnUpdate(int *targetSpeed, bool *speedFlag)
 {
   static unsigned long period = 250;
   static unsigned long waitTime = 0;
@@ -271,7 +272,7 @@ void UI_btnUpdate(int *targetSpeed)
     int btnState = digitalRead(BTNS[i]);
     if (btnState == LOW && (millis() > waitTime) )
     {
-      updateValue(BTNS[i], targetSpeed);
+      updateValue(BTNS[i], targetSpeed, speedFlag);
       // DISPLAY_UPDATE = true;
       waitTime = millis() + period;
     }  

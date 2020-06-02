@@ -45,7 +45,7 @@ void UI_init(Adafruit_SSD1306 *display);
 // Update OLED Display
 void UI_updateDisplay(Adafruit_SSD1306 *display, int targetSpeed);
 
-void UI_btnUpdate(int *targetSpeed);
+void UI_btnUpdate(int *targetSpeed, bool *speedFlag);
 
 // void UI_setSpeed(int *targetSpeed, int newSpeed);
 
