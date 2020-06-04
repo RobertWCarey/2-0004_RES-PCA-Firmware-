@@ -113,8 +113,15 @@ void UI_updateDisplay(Adafruit_SSD1306 *display, int targetSpeed)
       break;
     // Adjust Speed
     case 2:
-      // Serial.print("Disp: "); Serial.println(SPEED_DISP[targetSpeed]);
-      mainMenuDisplay(SPEED_DISP[targetSpeed], display);
+      if (Emerg_Stop)
+      {
+        targetSpeed = 6;
+        mainMenuDisplay(F("Emerg Stop  Enabled"), display);
+      }
+      else
+      {
+        mainMenuDisplay(SPEED_DISP[targetSpeed], display);
+      }
       break;
     default:
       break;
