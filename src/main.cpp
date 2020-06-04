@@ -60,7 +60,7 @@ void maintainSpeed(void)
   int speedDiff = avgSpeed - SPEED_VAL[Target_Speed];
 
   // Closed loop control
-  if (Target_Speed == 6) //positive dir
+  if (Target_Speed == 6 || Emerg_Stop) //positive dir
   {
     setDutyCycle(50);
   }

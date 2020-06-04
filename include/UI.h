@@ -20,6 +20,8 @@ const uint8_t PROGMEM BTN_DOWN = 12;
 // Note D13 is not ideal as it has a res the needs to be desoldered on the nano to work
 const uint8_t PROGMEM BTN_BACK = 13;
 
+extern bool Emerg_Stop;
+
 // bool DISPLAY_UPDATE = true;
 
 typedef union {
