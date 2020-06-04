@@ -49,7 +49,7 @@ void maintainSpeed(void)
   static unsigned long waitTime = 0;
 
   static int avgSpeed;
-  static int avgSamples = 3;
+  static int avgSamples = 10;
   int p_o = 35;
   int hyst = 20;
 
@@ -90,11 +90,11 @@ void maintainSpeed(void)
       {
         if (speedDiff < 0)
         {
-          setDutyCycle(DUTY + 5);
+          setDutyCycle(DUTY + 3);
         }
         else
         {
-          setDutyCycle(DUTY - 5);
+          setDutyCycle(DUTY - 3);
         }
       }
       waitTime = millis() + period;
