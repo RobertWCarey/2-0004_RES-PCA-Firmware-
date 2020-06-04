@@ -41,27 +41,34 @@ void setFreq(int32_t freq);
 
 void PWMInit(void);
 
-// void maintainSpeed(void);
+void maintainSpeed(void);
+
+int average(int avg, int newNum)
+{
+}
 
 unsigned long period = 500;
 unsigned long waitTime = 0;
 
 void maintainSpeed(void)
 {
-  int currentSpeed = analogRead(GEN_PIN);
-  Serial.print("CurrentSpeed: ");
-  Serial.println(currentSpeed);
+  static int avgSpeed;
+  static int avgSamples = 10;
 
-  int speedDiff = currentSpeed - SPEED_VAL[Target_Speed];
-  Serial.print("Speeddif: ");
-  Serial.println(speedDiff);
+  int currentSpeed = analogRead(GEN_PIN);
+
+  // Calculate the moving average of the current speed
+  avgSpeed -= avgSpeed / avgSamples;
+  avgSpeed += currentSpeed / avgSamples;
+
+  int speedDiff = avgSpeed - SPEED_VAL[Target_Speed];
 
   // Closed loop control
   if (Target_Speed == 6) //positive dir
   {
     setDutyCycle(50);
   }
-  else if ((speedDiff > 50) || (speedDiff < -50))
+  else if ((speedDiff > 20) || (speedDiff < -20))
   {
     if (speedDiff < 0)
     {
@@ -79,12 +86,6 @@ void maintainSpeed(void)
         waitTime = millis() + period;
       }
     }
-
-    // }
-
-    // Open Loop Control
-    // setDutyCycle(SPEED_DUTY[Target_Speed]);
-    // delay(1000);
   }
 }
 
@@ -151,29 +152,11 @@ void setup()
   UI_init(&display);
 }
 
-// unsigned long period = 500;
-// unsigned long waitTime = 0;
-
 void loop()
 {
-  // if (DISPLAY_UPDATE)
-  // {
   UI_updateDisplay(&display, Target_Speed);
-  //   DISPLAY_UPDATE = false;
-  // }
 
   UI_btnUpdate(&Target_Speed);
 
-  // if (millis() > waitTime)
-  // {
-  // Serial.print("TSpeed: ");
-  // Serial.println(Target_Speed);
-  // Serial.print("Speed Duty: ");
-  // Serial.println(SPEED_DUTY[Target_Speed]);
-
   maintainSpeed();
-
-  //   waitTime = millis() + period;
-  // }
-  // delay(100);
 }
