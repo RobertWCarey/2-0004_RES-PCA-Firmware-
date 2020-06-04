@@ -45,11 +45,13 @@ void maintainSpeed(void);
 
 void maintainSpeed(void)
 {
-  static unsigned long period = 500;
+  static unsigned long period = 300;
   static unsigned long waitTime = 0;
 
   static int avgSpeed;
-  static int avgSamples = 10;
+  static int avgSamples = 3;
+  int p_o = 35;
+  int hyst = 20;
 
   int currentSpeed = analogRead(GEN_PIN);
 
@@ -59,28 +61,43 @@ void maintainSpeed(void)
 
   int speedDiff = avgSpeed - SPEED_VAL[Target_Speed];
 
+  Serial.print("Speed Diff: ");
+  Serial.println(speedDiff);
+
   // Closed loop control
   if (Target_Speed == 6 || Emerg_Stop) //positive dir
   {
     setDutyCycle(50);
   }
-  else if ((speedDiff > 20) || (speedDiff < -20))
+  // Check if within hysteresis
+  else if (abs(speedDiff) > hyst)
   {
-    if (speedDiff < 0)
+    if (millis() > waitTime)
     {
-      if (millis() > waitTime)
+      // check if within peturb and observe
+      if (abs(speedDiff) < p_o)
       {
-        setDutyCycle(DUTY + 1);
-        waitTime = millis() + period;
+        if (speedDiff < 0)
+        {
+          setDutyCycle(DUTY + 1);
+        }
+        else
+        {
+          setDutyCycle(DUTY - 1);
+        }
       }
-    }
-    else
-    {
-      if (millis() > waitTime)
+      else
       {
-        setDutyCycle(DUTY - 1);
-        waitTime = millis() + period;
+        if (speedDiff < 0)
+        {
+          setDutyCycle(DUTY + 5);
+        }
+        else
+        {
+          setDutyCycle(DUTY - 5);
+        }
       }
+      waitTime = millis() + period;
     }
   }
 }
