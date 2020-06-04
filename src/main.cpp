@@ -43,15 +43,11 @@ void PWMInit(void);
 
 void maintainSpeed(void);
 
-int average(int avg, int newNum)
-{
-}
-
-unsigned long period = 500;
-unsigned long waitTime = 0;
-
 void maintainSpeed(void)
 {
+  static unsigned long period = 500;
+  static unsigned long waitTime = 0;
+
   static int avgSpeed;
   static int avgSamples = 10;
 
