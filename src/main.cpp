@@ -9,30 +9,15 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 const int SPEED_VAL[] =
     {
-        220, 280, 340, 415, 475,
-        506,
-        530, 600, 680, 740, 820};
+        220, 280, 340, 415, 475, 506, 506,
+        506, 530, 600, 680, 740, 820};
 
 const int SPEED_DUTY[] =
     {
-        80,
-        75,
-        70,
-        65,
-        60,
-        55,
-        50,
-        45,
-        40,
-        35,
-        30,
-        25,
-        20,
-};
+        80, 75, 70, 65, 60, 55, 50, 45, 40, 35, 30, 25, 20};
 
 // Set to 10 as the is the zero point in the array
 int Target_Speed = 6;
-bool SpeedFlag = false;
 
 // Constants
 const int PROGMEM pin_PWM = 10;
@@ -56,59 +41,48 @@ void setFreq(int32_t freq);
 
 void PWMInit(void);
 
-// void maintainSpeed(void);
+void maintainSpeed(void);
 
 void maintainSpeed(void)
 {
-  static unsigned long period = 250;
+  static unsigned long period = 500;
   static unsigned long waitTime = 0;
+
+  static int avgSpeed;
+  static int avgSamples = 10;
+
   int currentSpeed = analogRead(GEN_PIN);
-  //Serial.println(currentSpeed, DEC);
-  int speedDiff = currentSpeed - SPEED_VAL[Target_Speed];
-  Serial.println(Target_Speed);
-  if (SpeedFlag == true)
-  {
-    SpeedFlag = false;
-    Serial.println("SPEED CHANGE RECOGNISED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-    setDutyCycle(SPEED_DUTY[Target_Speed]);
-    //delay(1000);
-  }
+
+  // Calculate the moving average of the current speed
+  avgSpeed -= avgSpeed / avgSamples;
+  avgSpeed += currentSpeed / avgSamples;
+
+  int speedDiff = avgSpeed - SPEED_VAL[Target_Speed];
+
   // Closed loop control
   if (Target_Speed == 6) //positive dir
   {
     setDutyCycle(50);
   }
-  else if ((speedDiff > 50) || (speedDiff < -50))
+  else if ((speedDiff > 20) || (speedDiff < -20))
   {
     if (speedDiff < 0)
     {
-
-      if ((millis() > waitTime))
+      if (millis() > waitTime)
       {
+        setDutyCycle(DUTY + 1);
         waitTime = millis() + period;
       }
-      setDutyCycle(DUTY + 1);
     }
     else
     {
-
-      if ((millis() > waitTime))
+      if (millis() > waitTime)
       {
+        setDutyCycle(DUTY - 1);
         waitTime = millis() + period;
       }
-      setDutyCycle(DUTY - 1);
     }
   }
-
-
-  // // Open Loop Control
-  // if (SpeedFlag == true)
-  // {
-  //   setDutyCycle(SPEED_DUTY[Target_Speed]);
-  //   SpeedFlag = false;
-  // }
-
-  // delay(1000);
 }
 
 int getAWrite(int32_t freq, int duty)
@@ -120,11 +94,11 @@ int getAWrite(int32_t freq, int duty)
 
 void setDutyCycle(int duty)
 {
-  if ((duty < 20) && (duty != 0))
+  if ((duty < 10) && (duty != 0))
   {
     duty = 20;
   }
-  else if (duty > 80)
+  else if (duty > 90)
   {
     duty = 80;
   }
@@ -174,29 +148,11 @@ void setup()
   UI_init(&display);
 }
 
-unsigned long period = 500;
-unsigned long waitTime = 0;
-
 void loop()
 {
-  // if (DISPLAY_UPDATE)
-  // {
   UI_updateDisplay(&display, Target_Speed);
-  //   DISPLAY_UPDATE = false;
-  // }
 
-  UI_btnUpdate(&Target_Speed, &SpeedFlag);
-
-  // if (millis() > waitTime)
-  // {
-  // Serial.print("TSpeed: ");
-  // Serial.println(Target_Speed);
-  // Serial.print("Speed Duty: ");
-  // Serial.println(SPEED_DUTY[Target_Speed]);
+  UI_btnUpdate(&Target_Speed);
 
   maintainSpeed();
-
-  //   waitTime = millis() + period;
-  // }
-  // delay(100);
 }
