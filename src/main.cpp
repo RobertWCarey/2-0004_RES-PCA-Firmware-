@@ -7,101 +7,43 @@ int32_t clkFreq = 16000000;
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
+// Stores the GEN_PIN value for corresponding speedsetting
 const int SPEED_VAL[] =
     {
-        220, 280, 340, 415, 475, 506, 506,
+        220, 280, 340, 415, 475, 506,
+        506,
         506, 530, 600, 680, 740, 820};
 
-const int SPEED_DUTY[] =
-    {
-        80, 75, 70, 65, 60, 55, 50, 45, 40, 35, 30, 25, 20};
-
-// Set to 10 as the is the zero point in the array
+// Set to 6 as this is Speed zero in the arrays
 int Target_Speed = 6;
 
-// Constants
+// Pin Definitions
 const int PROGMEM pin_PWM = 10;
 const int PROGMEM pin_PWM2 = 9;
-const int PROGMEM defaultDuty = 50;
-const int32_t PROGMEM defaultFreq = 40000; //frequency (in Hz)
+const int PROGMEM GEN_PIN = A0; // Generator Feedback pin
 
-const int PROGMEM GEN_PIN = A0;
+// Defaults
+const int PROGMEM defaultDuty = 50;        // Duty cycle (as %)
+const int32_t PROGMEM defaultFreq = 40000; //frequency (in Hz)
 
 // Globals
 int DUTY = defaultDuty;
-int32_t FREQ = defaultFreq;
-String Command;
+int32_t FREQ = defaultFreq; // legacy param for when PWM freq changed
 
 // Gets value to set analogWrite function
 int getAWrite(int32_t freq, int duty);
 // Updates the duty cycle for pin_PWM
 void setDutyCycle(int duty);
-// Updates the frequency for pin_PWM
-void setFreq(int32_t freq);
 
 void PWMInit(void);
 
-void maintainSpeed(void);
-
-void maintainSpeed(void)
-{
-  static unsigned long period = 300;
-  static unsigned long waitTime = 0;
-
-  static int avgSpeed;
-  static int avgSamples = 10;
-  int p_o = 35;
-  int hyst = 20;
-
-  int currentSpeed = analogRead(GEN_PIN);
-
-  // Calculate the moving average of the current speed
-  avgSpeed -= avgSpeed / avgSamples;
-  avgSpeed += currentSpeed / avgSamples;
-
-  int speedDiff = avgSpeed - SPEED_VAL[Target_Speed];
-
-  Serial.print("Speed Diff: ");
-  Serial.println(speedDiff);
-
-  // Closed loop control
-  if (Target_Speed == 6 || Emerg_Stop) //positive dir
-  {
-    setDutyCycle(50);
-  }
-  // Check if within hysteresis
-  else if (abs(speedDiff) > hyst)
-  {
-    if (millis() > waitTime)
-    {
-      // check if within peturb and observe
-      if (abs(speedDiff) < p_o)
-      {
-        if (speedDiff < 0)
-        {
-          setDutyCycle(DUTY + 1);
-        }
-        else
-        {
-          setDutyCycle(DUTY - 1);
-        }
-      }
-      else
-      {
-        if (speedDiff < 0)
-        {
-          setDutyCycle(DUTY + 3);
-        }
-        else
-        {
-          setDutyCycle(DUTY - 3);
-        }
-      }
-      waitTime = millis() + period;
-    }
-  }
-}
-
+/*! @brief Gets value to set analogWrite function for request duty%
+ *
+ *  @param freq Frequency of the PWM signal
+ *  @param duty Duty% of the PWM signal
+ *
+ *  @return required analogwrite int
+ */
 int getAWrite(int32_t freq, int duty)
 {
   int32_t x = clkFreq / (2 * freq);
@@ -109,6 +51,12 @@ int getAWrite(int32_t freq, int duty)
   return (x * duty) / 100;
 }
 
+/*! @brief Updates the Global Duty cycle and sets the PWM pins duty cycle
+ *
+ *  @param duty Duty% of the PWM signal
+ *
+ *  @return void
+ */
 void setDutyCycle(int duty)
 {
   if ((duty < 10) && (duty != 0))
@@ -124,38 +72,104 @@ void setDutyCycle(int duty)
   analogWrite(pin_PWM2, getAWrite(FREQ, duty));
 }
 
-void setFreq(int32_t freq)
+/*! @brief Control scheme to keep the motor rotating at the desired speed setting
+ *
+ *  @param void
+ *
+ *  @return void
+ */
+void maintainSpeed(void)
 {
-  if (freq < 5000)
+  static unsigned long period = 300; // Used to increment on current time for waits
+  static unsigned long waitTime = 0;
+
+  static int avgSpeed;
+  static int avgSamples = 10;
+  int p_o = 35;  // Petrub and observe window
+  int hyst = 20; // hysteresis window
+
+  int currentSpeed = analogRead(GEN_PIN);
+
+  // Calculate the moving average of the current speed
+  avgSpeed -= avgSpeed / avgSamples;
+  avgSpeed += currentSpeed / avgSamples;
+
+  // Difference between current speed at corresponding speed setting val
+  int speedDiff = avgSpeed - SPEED_VAL[Target_Speed];
+
+  // Closed loop control
+  if (Target_Speed == 6 || Emerg_Stop) //positive dir
   {
-    freq = 5000;
+    setDutyCycle(50);
   }
-  else if (freq > 100000)
+  // Check if within hysteresis
+  else if (abs(speedDiff) > hyst)
   {
-    freq = 1000000;
+    // Only update the duty cycle every "period" ms
+    if (millis() > waitTime)
+    {
+      int dutyIncr = 0;
+      // check if within peturb and observe
+      if (abs(speedDiff) < p_o)
+      {
+        // Small steps
+        dutyIncr = 1;
+      }
+      else
+      {
+        // Large steps
+        dutyIncr = 3;
+      }
+
+      if (speedDiff < 0)
+      {
+        setDutyCycle(DUTY + dutyIncr);
+      }
+      else
+      {
+        setDutyCycle(DUTY - dutyIncr);
+      }
+
+      waitTime = millis() + period;
+    }
   }
-  FREQ = freq;
-  SetPinFrequencySafe(pin_PWM, freq);
-  analogWrite(pin_PWM, getAWrite(freq, DUTY));
-  analogWrite(pin_PWM2, getAWrite(freq, DUTY));
 }
 
+/*! @brief Initialise PWM functionality
+ *
+ *  @param void
+ *
+ *  @return void
+ */
 void PWMInit(void)
 {
-  //initialize all timers except for 0, to save time keeping functions
+  // Initialize all timers except for 0, to save time keeping functions
   InitTimersSafe();
-  //sets the frequency for the specified pin
+
+  // Set PWM pins with default freq
   bool success = SetPinFrequencySafe(pin_PWM, defaultFreq);
+  success |= SetPinFrequencySafe(pin_PWM2, defaultFreq);
+
   if (success)
   {
     pinMode(pin_PWM, OUTPUT);
     pinMode(pin_PWM2, OUTPUT);
   }
+
+  // Configures it so on output compare match pwm and pwm 2 output opposite
   TCCR1A |= _BV(COM1A0);
+
+  // Set PWM pins Duty cycle
   analogWrite(pin_PWM, getAWrite(defaultFreq, defaultDuty));
   analogWrite(pin_PWM2, getAWrite(defaultFreq, defaultDuty));
 }
 
+/*! @brief Default Setup function used for Arduino framework
+ *
+ *  @param void
+ *
+ *  @return void
+ */
 void setup()
 {
   Serial.begin(115200);
@@ -165,6 +179,12 @@ void setup()
   UI_init(&display);
 }
 
+/*! @brief Main Loop, executes forever
+ *
+ *  @param void
+ *
+ *  @return void
+ */
 void loop()
 {
   UI_updateDisplay(&display, Target_Speed);
