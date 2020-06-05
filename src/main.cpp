@@ -7,30 +7,28 @@ int32_t clkFreq = 16000000;
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
+// Stores the GEN_PIN value for corresponding speedsetting
 const int SPEED_VAL[] =
     {
-        220, 280, 340, 415, 475, 506, 506,
+        220, 280, 340, 415, 475, 506,
+        506,
         506, 530, 600, 680, 740, 820};
 
-const int SPEED_DUTY[] =
-    {
-        80, 75, 70, 65, 60, 55, 50, 45, 40, 35, 30, 25, 20};
-
-// Set to 10 as the is the zero point in the array
+// Set to 6 as this is Speed zero in the arrays
 int Target_Speed = 6;
 
-// Constants
+// Pin Definitions
 const int PROGMEM pin_PWM = 10;
 const int PROGMEM pin_PWM2 = 9;
+const int PROGMEM GEN_PIN = A0;
+
+// Defaults
 const int PROGMEM defaultDuty = 50;
 const int32_t PROGMEM defaultFreq = 40000; //frequency (in Hz)
-
-const int PROGMEM GEN_PIN = A0;
 
 // Globals
 int DUTY = defaultDuty;
 int32_t FREQ = defaultFreq;
-String Command;
 
 // Gets value to set analogWrite function
 int getAWrite(int32_t freq, int duty);
@@ -41,67 +39,13 @@ void setFreq(int32_t freq);
 
 void PWMInit(void);
 
-void maintainSpeed(void);
-
-void maintainSpeed(void)
-{
-  static unsigned long period = 300;
-  static unsigned long waitTime = 0;
-
-  static int avgSpeed;
-  static int avgSamples = 10;
-  int p_o = 35;
-  int hyst = 20;
-
-  int currentSpeed = analogRead(GEN_PIN);
-
-  // Calculate the moving average of the current speed
-  avgSpeed -= avgSpeed / avgSamples;
-  avgSpeed += currentSpeed / avgSamples;
-
-  int speedDiff = avgSpeed - SPEED_VAL[Target_Speed];
-
-  Serial.print("Speed Diff: ");
-  Serial.println(speedDiff);
-
-  // Closed loop control
-  if (Target_Speed == 6 || Emerg_Stop) //positive dir
-  {
-    setDutyCycle(50);
-  }
-  // Check if within hysteresis
-  else if (abs(speedDiff) > hyst)
-  {
-    if (millis() > waitTime)
-    {
-      // check if within peturb and observe
-      if (abs(speedDiff) < p_o)
-      {
-        if (speedDiff < 0)
-        {
-          setDutyCycle(DUTY + 1);
-        }
-        else
-        {
-          setDutyCycle(DUTY - 1);
-        }
-      }
-      else
-      {
-        if (speedDiff < 0)
-        {
-          setDutyCycle(DUTY + 3);
-        }
-        else
-        {
-          setDutyCycle(DUTY - 3);
-        }
-      }
-      waitTime = millis() + period;
-    }
-  }
-}
-
+/*! @brief Gets value to set analogWrite function for request duty%
+ *
+ *  @param freq Frequency of the PWM signal
+ *  @param duty Duty% of the PWM signal
+ *
+ *  @return required analogwrite int
+ */
 int getAWrite(int32_t freq, int duty)
 {
   int32_t x = clkFreq / (2 * freq);
@@ -109,6 +53,12 @@ int getAWrite(int32_t freq, int duty)
   return (x * duty) / 100;
 }
 
+/*! @brief Updates the Global Duty cycle and sets the PWM pins duty cycle
+ *
+ *  @param duty Duty% of the PWM signal
+ *
+ *  @return void
+ */
 void setDutyCycle(int duty)
 {
   if ((duty < 10) && (duty != 0))
@@ -122,6 +72,69 @@ void setDutyCycle(int duty)
   DUTY = duty;
   analogWrite(pin_PWM, getAWrite(FREQ, duty));
   analogWrite(pin_PWM2, getAWrite(FREQ, duty));
+}
+
+/*! @brief Control scheme to keep the motor rotating at the desired speed setting
+ *
+ *  @param void
+ *
+ *  @return void
+ */
+void maintainSpeed(void)
+{
+  static unsigned long period = 300; // Used to increment on current time for waits
+  static unsigned long waitTime = 0;
+
+  static int avgSpeed;
+  static int avgSamples = 10;
+  int p_o = 35;  // Petrub and observe window
+  int hyst = 20; // hysteresis window
+
+  int currentSpeed = analogRead(GEN_PIN);
+
+  // Calculate the moving average of the current speed
+  avgSpeed -= avgSpeed / avgSamples;
+  avgSpeed += currentSpeed / avgSamples;
+
+  // Difference between current speed at corresponding speed setting val
+  int speedDiff = avgSpeed - SPEED_VAL[Target_Speed];
+
+  // Closed loop control
+  if (Target_Speed == 6 || Emerg_Stop) //positive dir
+  {
+    setDutyCycle(50);
+  }
+  // Check if within hysteresis
+  else if (abs(speedDiff) > hyst)
+  {
+    // Only update the duty cycle every "period" ms
+    if (millis() > waitTime)
+    {
+      int dutyIncr = 0;
+      // check if within peturb and observe
+      if (abs(speedDiff) < p_o)
+      {
+        // Small steps
+        dutyIncr = 1;
+      }
+      else
+      {
+        // Large steps
+        dutyIncr = 3;
+      }
+
+      if (speedDiff < 0)
+      {
+        setDutyCycle(DUTY + dutyIncr);
+      }
+      else
+      {
+        setDutyCycle(DUTY - dutyIncr);
+      }
+
+      waitTime = millis() + period;
+    }
+  }
 }
 
 void setFreq(int32_t freq)
