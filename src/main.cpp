@@ -20,15 +20,15 @@ int Target_Speed = 6;
 // Pin Definitions
 const int PROGMEM pin_PWM = 10;
 const int PROGMEM pin_PWM2 = 9;
-const int PROGMEM GEN_PIN = A0;
+const int PROGMEM GEN_PIN = A0; // Generator Feedback pin
 
 // Defaults
-const int PROGMEM defaultDuty = 50;
+const int PROGMEM defaultDuty = 50;        // Duty cycle (as %)
 const int32_t PROGMEM defaultFreq = 40000; //frequency (in Hz)
 
 // Globals
 int DUTY = defaultDuty;
-int32_t FREQ = defaultFreq;
+int32_t FREQ = defaultFreq; // legacy param for when PWM freq changed
 
 // Gets value to set analogWrite function
 int getAWrite(int32_t freq, int duty);
@@ -135,23 +135,41 @@ void maintainSpeed(void)
   }
 }
 
+/*! @brief Initialise PWM functionality
+ *
+ *  @param void
+ *
+ *  @return void
+ */
 void PWMInit(void)
 {
-  //initialize all timers except for 0, to save time keeping functions
+  // Initialize all timers except for 0, to save time keeping functions
   InitTimersSafe();
-  //sets the frequency for the specified pin
+
+  // Set PWM pins with default freq
   bool success = SetPinFrequencySafe(pin_PWM, defaultFreq);
   success |= SetPinFrequencySafe(pin_PWM2, defaultFreq);
+
   if (success)
   {
     pinMode(pin_PWM, OUTPUT);
     pinMode(pin_PWM2, OUTPUT);
   }
+
+  // Configures it so on output compare match pwm and pwm 2 output opposite
   TCCR1A |= _BV(COM1A0);
+
+  // Set PWM pins Duty cycle
   analogWrite(pin_PWM, getAWrite(defaultFreq, defaultDuty));
   analogWrite(pin_PWM2, getAWrite(defaultFreq, defaultDuty));
 }
 
+/*! @brief Default Setup function used for Arduino framework
+ *
+ *  @param void
+ *
+ *  @return void
+ */
 void setup()
 {
   Serial.begin(115200);
@@ -161,6 +179,12 @@ void setup()
   UI_init(&display);
 }
 
+/*! @brief Main Loop, executes forever
+ *
+ *  @param void
+ *
+ *  @return void
+ */
 void loop()
 {
   UI_updateDisplay(&display, Target_Speed);
