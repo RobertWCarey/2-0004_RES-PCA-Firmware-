@@ -34,8 +34,6 @@ int32_t FREQ = defaultFreq;
 int getAWrite(int32_t freq, int duty);
 // Updates the duty cycle for pin_PWM
 void setDutyCycle(int duty);
-// Updates the frequency for pin_PWM
-void setFreq(int32_t freq);
 
 void PWMInit(void);
 
@@ -137,28 +135,13 @@ void maintainSpeed(void)
   }
 }
 
-void setFreq(int32_t freq)
-{
-  if (freq < 5000)
-  {
-    freq = 5000;
-  }
-  else if (freq > 100000)
-  {
-    freq = 1000000;
-  }
-  FREQ = freq;
-  SetPinFrequencySafe(pin_PWM, freq);
-  analogWrite(pin_PWM, getAWrite(freq, DUTY));
-  analogWrite(pin_PWM2, getAWrite(freq, DUTY));
-}
-
 void PWMInit(void)
 {
   //initialize all timers except for 0, to save time keeping functions
   InitTimersSafe();
   //sets the frequency for the specified pin
   bool success = SetPinFrequencySafe(pin_PWM, defaultFreq);
+  success |= SetPinFrequencySafe(pin_PWM2, defaultFreq);
   if (success)
   {
     pinMode(pin_PWM, OUTPUT);
