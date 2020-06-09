@@ -10,9 +10,9 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 // Stores the GEN_PIN value for corresponding speedsetting
 const int SPEED_VAL[] =
     {
-        220, 280, 340, 415, 475, 506,
+        220, 260, 300, 340, 380, 420,
         506,
-        506, 530, 600, 680, 740, 820};
+        560, 600, 640, 680, 720, 760};
 
 // Set to 6 as this is Speed zero in the arrays
 int Target_Speed = 6;
