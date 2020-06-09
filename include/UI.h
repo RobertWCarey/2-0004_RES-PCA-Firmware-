@@ -14,7 +14,7 @@
 #include <Adafruit_SSD1306.h>
 
 // Software version, used to display at startup
-const String SW_VER = "0.1.1";
+const String SW_VER = "1.0.0";
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
